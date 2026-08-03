@@ -1,0 +1,217 @@
+<section
+  class="grid gap-5 overflow-hidden rounded-shell border border-stroke bg-[radial-gradient(circle_at_10%_0%,color-mix(in_srgb,var(--blue)_18%,transparent),transparent_42%)] p-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(330px,.75fr)] lg:p-9"
+>
+  <div>
+    <span class="text-xs font-black tracking-[.14em] text-brand uppercase"
+      >Bentornato, {{ auth.principal()?.displayName }}</span
+    >
+    <h1 class="mt-4 max-w-3xl text-4xl leading-[1.05] font-extrabold tracking-[-.05em] md:text-6xl">
+      Dal file alla consegna, senza perdere il filo.
+    </h1>
+    <p class="mt-5 max-w-2xl text-base leading-7 text-ink-muted">
+      Il workspace {{ workspaces.current()?.workspace.name }} raccoglie produzione, accessi cliente
+      e collaborazione in percorsi distinti.
+    </p>
+    <div class="mt-7 flex flex-wrap gap-3">
+      <a
+        class="inline-flex min-h-12 items-center rounded-ui bg-gradient-to-br from-brand-deep to-brand px-5 text-sm font-bold text-white no-underline"
+        routerLink="/consegne"
+        >Crea una consegna</a
+      ><a
+        class="inline-flex min-h-12 items-center rounded-ui border border-stroke bg-panel-raised px-5 text-sm font-bold text-ink no-underline"
+        routerLink="/progetti"
+        >Apri i progetti</a
+      >
+    </div>
+  </div>
+  <div class="rounded-card border border-stroke bg-panel/85 p-5 backdrop-blur-xl">
+    <div class="flex items-center justify-between gap-4 border-b border-stroke pb-4">
+      <strong>Primo risultato utile</strong
+      ><small class="text-xs font-bold text-brand">{{
+        projects().length ? 'In corso' : 'Da iniziare'
+      }}</small>
+    </div>
+    <div class="mt-4 grid gap-3">
+      <div class="grid grid-cols-[34px_1fr] items-center gap-3" [class.done]="projects().length">
+        <span
+          class="grid size-8 place-items-center rounded-full bg-brand/12 text-xs font-black text-brand"
+          >{{ projects().length ? '✓' : '1' }}</span
+        >
+        <p class="text-sm font-bold">
+          Progetto creato<small class="mt-1 block text-xs font-normal text-ink-muted"
+            >Struttura file pronta</small
+          >
+        </p>
+      </div>
+      <div class="grid grid-cols-[34px_1fr] items-center gap-3" [class.done]="deliveries()">
+        <span
+          class="grid size-8 place-items-center rounded-full bg-brand/12 text-xs font-black text-brand"
+          >{{ deliveries() ? '✓' : '2' }}</span
+        >
+        <p class="text-sm font-bold">
+          Consegna attiva<small class="mt-1 block text-xs font-normal text-ink-muted"
+            >Snapshot e link cliente</small
+          >
+        </p>
+      </div>
+      <div class="grid grid-cols-[34px_1fr] items-center gap-3">
+        <span
+          class="grid size-8 place-items-center rounded-full bg-panel-strong text-xs font-black text-ink-muted"
+          >3</span
+        >
+        <p class="text-sm font-bold">
+          Feedback cliente<small class="mt-1 block text-xs font-normal text-ink-muted"
+            >Commento o approvazione</small
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+@if (error()) {
+  <div class="mt-5 rounded-card border border-negative/30 bg-negative/8 p-4 text-sm text-negative">
+    {{ error() }}
+  </div>
+}
+<section class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicatori principali">
+  <article class="flex items-center gap-4 rounded-card border border-stroke bg-panel p-4">
+    <span
+      class="grid size-11 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+      >PR</span
+    >
+    <div>
+      <small class="block text-xs text-ink-muted">Progetti</small
+      ><strong class="mt-1 block text-2xl">{{ projects().length }}</strong
+      ><em class="block text-[11px] not-italic text-ink-muted">visibili nel tuo ambito</em>
+    </div>
+  </article>
+  <article class="flex items-center gap-4 rounded-card border border-stroke bg-panel p-4">
+    <span
+      class="grid size-11 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+      >CO</span
+    >
+    <div>
+      <small class="block text-xs text-ink-muted">Consegne</small
+      ><strong class="mt-1 block text-2xl">{{ deliveries() }}</strong
+      ><em class="block text-[11px] not-italic text-ink-muted">snapshot creati</em>
+    </div>
+  </article>
+  <article class="flex items-center gap-4 rounded-card border border-stroke bg-panel p-4">
+    <span
+      class="grid size-11 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+      >CL</span
+    >
+    <div>
+      <small class="block text-xs text-ink-muted">Clienti</small
+      ><strong class="mt-1 block text-2xl">{{ clients() }}</strong
+      ><em class="block text-[11px] not-italic text-ink-muted">nella rubrica</em>
+    </div>
+  </article>
+  <article class="flex items-center gap-4 rounded-card border border-stroke bg-panel p-4">
+    <span
+      class="grid size-11 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+      >GB</span
+    >
+    <div>
+      <small class="block text-xs text-ink-muted">Storage usato</small
+      ><strong class="mt-1 block text-2xl">{{ storageGb() }}</strong
+      ><em class="block text-[11px] not-italic text-ink-muted">GB arrotondati per eccesso</em>
+    </div>
+  </article>
+</section>
+<section class="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(330px,.55fr)]">
+  <article class="overflow-hidden rounded-card border border-stroke bg-panel">
+    <header class="flex items-start justify-between gap-5 border-b border-stroke p-5 sm:p-6">
+      <div>
+        <span class="text-xs font-black tracking-[.14em] text-brand uppercase">In movimento</span>
+        <h2 class="mt-2 text-xl font-extrabold">Progetti recenti</h2>
+        <p class="mt-1 text-sm text-ink-muted">Dati reali del workspace selezionato.</p>
+      </div>
+      <a
+        class="inline-flex min-h-10 items-center rounded-ui border border-stroke bg-panel-raised px-4 text-xs font-bold text-ink no-underline"
+        routerLink="/progetti"
+        >Vedi tutti</a
+      >
+    </header>
+    <div class="divide-y divide-stroke">
+      @for (project of projects(); track project.id) {
+        <a
+          class="grid min-h-20 grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 px-5 text-ink no-underline transition hover:bg-panel-raised sm:px-6"
+          [routerLink]="['/progetti', project.id]"
+          ><span
+            class="grid size-10 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+            >PR</span
+          ><span
+            ><strong class="block text-sm">{{ project.name }}</strong
+            ><small class="mt-1 block text-xs text-ink-muted"
+              >{{ project.status }} · {{ project.updatedAt }}</small
+            ></span
+          ><span class="text-brand">→</span></a
+        >
+      } @empty {
+        <a
+          class="empty-project-cta flex min-h-28 w-full items-center justify-between gap-4 px-5 text-ink no-underline transition hover:bg-panel-raised sm:px-6"
+          routerLink="/progetti"
+          ><span
+            ><strong class="block text-sm">Crea il primo progetto</strong
+            ><small class="mt-1 block text-xs text-ink-muted"
+              >Il trial Pro è attivo per 30 giorni.</small
+            ></span
+          ><span class="text-brand" aria-hidden="true">→</span></a
+        >
+      }
+    </div>
+  </article>
+  <aside class="grid gap-5">
+    <article class="rounded-card border border-stroke bg-panel p-6">
+      <span class="mb-6 flex -space-x-2"
+        ><i
+          class="grid size-12 place-items-center rounded-full border-2 border-panel bg-brand text-xs font-black not-italic text-white"
+          >CL</i
+        ><b
+          class="grid size-12 place-items-center rounded-full border-2 border-panel bg-accent text-xs font-black text-slate-950"
+          >CO</b
+        ></span
+      ><span class="text-xs font-black tracking-[.14em] text-brand uppercase"
+        >Permessi senza ambiguità</span
+      >
+      <h2 class="mt-3 text-2xl font-extrabold">Due accessi, due scopi.</h2>
+      <p class="mt-2 text-sm leading-6 text-ink-muted">
+        La consegna è per il cliente; l’invito autenticato è per chi collabora.
+      </p>
+      <a
+        class="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-ui bg-brand px-4 text-sm font-bold text-white no-underline"
+        routerLink="/consegne"
+        >Crea un accesso</a
+      >
+    </article>
+    <article class="rounded-card border border-stroke bg-panel p-6">
+      <header>
+        <div>
+          <span class="text-xs font-black tracking-[.14em] text-brand uppercase">Workspace</span>
+          <h2 class="mt-2 text-xl font-extrabold">Attività recente</h2>
+        </div>
+      </header>
+      <div class="mt-5 grid gap-4">
+        @for (event of activity(); track event.id) {
+          <div class="grid grid-cols-[20px_1fr] gap-2">
+            <span class="text-brand">•</span>
+            <p class="text-sm">
+              {{ event.summary
+              }}<small class="mt-1 block text-xs text-ink-muted">{{ event.createdAt }}</small>
+            </p>
+          </div>
+        } @empty {
+          <div class="grid grid-cols-[20px_1fr] gap-2">
+            <span class="text-positive">✓</span>
+            <p class="text-sm">
+              Il workspace è pronto.<small class="mt-1 block text-xs text-ink-muted"
+                >Le azioni appariranno qui.</small
+              >
+            </p>
+          </div>
+        }
+      </div>
+    </article>
+  </aside>
+</section>

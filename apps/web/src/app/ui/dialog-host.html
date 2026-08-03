@@ -1,0 +1,68 @@
+@if (dialogs.active(); as dialog) {
+  <div
+    class="fixed inset-0 z-[9000] grid place-items-center p-4"
+    role="presentation"
+    phAppendToBody
+  >
+    @if (dialog.kind !== 'alert') {
+      <button
+        class="absolute inset-0 w-full border-0 bg-slate-950/80 backdrop-blur-md"
+        type="button"
+        (click)="cancel()"
+        aria-label="Annulla"
+      ></button>
+    } @else {
+      <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md"></div>
+    }
+    <form
+      class="relative w-[min(480px,100%)] animate-rise rounded-shell border border-stroke bg-panel p-6 text-ink shadow-float"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ph-dialog-title"
+      (submit)="submit($event)"
+    >
+      <header class="flex items-center gap-3">
+        <span
+          class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-brand-deep to-brand text-xs font-black text-white"
+          aria-hidden="true"
+          >{{ dialog.kind === 'prompt' ? 'Aa' : dialog.kind === 'confirm' ? '✓' : 'i' }}</span
+        >
+        <div>
+          <small class="text-[10px] font-black tracking-[.14em] text-ink-muted">PORTFOLIOHUB</small>
+          <h2 class="mt-1 text-xl font-extrabold" id="ph-dialog-title">{{ dialog.title }}</h2>
+        </div>
+      </header>
+      <p class="my-5 whitespace-pre-line text-sm leading-7 text-ink-muted">{{ dialog.message }}</p>
+      @if (dialog.kind === 'prompt') {
+        <label class="grid gap-2 text-sm font-bold"
+          >{{ dialog.inputLabel
+          }}<input
+            class="min-h-11 w-full rounded-ui border border-stroke bg-panel-raised px-3 text-ink outline-none focus:border-brand focus:ring-3 focus:ring-brand/10"
+            name="dialogValue"
+            [type]="dialog.inputType"
+            [placeholder]="dialog.placeholder"
+            [(ngModel)]="value"
+            autofocus
+            autocomplete="off"
+        /></label>
+      }
+      <footer class="mt-6 flex justify-end gap-2">
+        @if (dialog.kind !== 'alert') {
+          <button
+            class="min-h-10 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+            type="button"
+            (click)="cancel()"
+          >
+            {{ dialog.cancelLabel }}
+          </button>
+        }
+        <button
+          class="min-h-10 rounded-ui border-0 bg-gradient-to-br from-brand-deep to-brand px-4 text-sm font-bold text-white"
+          type="submit"
+        >
+          {{ dialog.confirmLabel }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}

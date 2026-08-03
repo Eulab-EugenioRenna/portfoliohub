@@ -1,0 +1,42 @@
+<div class="overflow-hidden rounded-card border border-stroke bg-panel">
+  <div class="border-b border-stroke p-3">
+    <label class="relative block max-w-sm">
+      <span class="absolute inset-y-0 left-3 flex items-center text-ink-muted" aria-hidden="true"
+        >⌕</span
+      >
+      <input
+        class="min-h-10 w-full rounded-ui border border-stroke bg-panel-raised pr-3 pl-9 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-brand/60 focus:ring-3 focus:ring-brand/10"
+        type="search"
+        [placeholder]="filterPlaceholder()"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </label>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[620px] border-collapse text-left text-sm">
+      <thead class="bg-panel-raised text-xs tracking-[0.08em] text-ink-muted uppercase">
+        <tr>
+          @for (column of columns(); track column.key) {
+            <th class="border-b border-stroke px-4 py-3 font-extrabold">{{ column.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of filteredRows(); track $index) {
+          <tr class="transition hover:bg-brand/5">
+            @for (column of columns(); track column.key) {
+              <td class="border-b border-stroke px-4 py-3.5 text-ink">{{ row[column.key] }}</td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td class="px-4 py-10 text-center text-ink-muted" [attr.colspan]="columns().length">
+              Nessun risultato.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

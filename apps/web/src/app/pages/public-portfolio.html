@@ -1,0 +1,134 @@
+@if (document(); as site) {
+  <main
+    id="top"
+    class="min-h-dvh bg-[#f4f0e9] px-5 text-[#181715] sm:px-8 lg:px-12"
+    [style.--accent]="site.theme.accent"
+  >
+    <header
+      class="mx-auto flex min-h-24 max-w-[1500px] items-center justify-between border-b border-black/15"
+    >
+      <a
+        class="flex items-center text-lg font-black text-inherit no-underline"
+        href="#top"
+        aria-label="Torna all’inizio"
+      >
+        @if (logoUrl(site)) {
+          <img
+            class="max-h-12 max-w-52 object-contain"
+            [src]="logoUrl(site)"
+            [alt]="site.identity.title"
+          />
+        } @else {
+          <strong>{{ site.identity.title }}</strong>
+        }
+      </a>
+      <nav class="flex gap-5 text-xs font-bold sm:gap-8 sm:text-sm">
+        @if ((site.media?.length ?? 0) > 0) {
+          <a class="text-inherit no-underline hover:opacity-55" href="#work">Lavori</a>
+        }
+        @if (site.identity.about) {
+          <a class="text-inherit no-underline hover:opacity-55" href="#about">Profilo</a>
+        }
+        <a class="text-inherit no-underline hover:opacity-55" href="#contact">Contatti</a>
+      </nav>
+    </header>
+    <section class="mx-auto grid min-h-[68vh] max-w-[1500px] content-center py-16">
+      <span class="text-xs font-black tracking-[0.2em] text-[var(--accent)]">PORTFOLIO</span>
+      <h1
+        class="mt-6 max-w-6xl font-display text-5xl leading-[.98] font-normal tracking-[-0.06em] sm:text-7xl lg:text-9xl"
+      >
+        {{ site.identity.tagline }}
+      </h1>
+      @if (site.cta) {
+        <a
+          class="mt-10 inline-flex min-h-13 w-fit items-center gap-5 rounded-full bg-[#181715] px-6 text-sm font-bold text-white no-underline transition hover:-translate-y-1"
+          [href]="site.cta.url"
+          >{{ site.cta.label }} <span>→</span></a
+        >
+      } @else {
+        <i class="mt-12 block h-px w-28 bg-[var(--accent)]"></i>
+      }
+    </section>
+    <section
+      class="mx-auto max-w-[1500px] gap-5 pb-24 md:grid md:grid-cols-3 [&.masonry]:block [&.masonry]:[columns:2] lg:[&.masonry]:[columns:3]"
+      [class.masonry]="(site.media?.length ?? 0) > 3"
+      id="work"
+    >
+      @for (asset of site.media ?? []; track asset.id) {
+        <figure class="mb-5 break-inside-avoid overflow-hidden bg-black/5">
+          @if (asset.type === 'image') {
+            <img
+              class="block h-auto w-full object-cover transition duration-500 hover:scale-[1.02]"
+              [src]="mediaUrl(asset)"
+              [alt]="asset.alt"
+              loading="lazy"
+            />
+          } @else {
+            <video
+              class="block h-auto w-full"
+              [src]="mediaUrl(asset)"
+              controls
+              preload="metadata"
+              playsinline
+            ></video>
+          }
+          @if (asset.caption) {
+            <figcaption class="p-3 text-xs text-black/60">{{ asset.caption }}</figcaption>
+          }
+        </figure>
+      } @empty {
+        <article class="aspect-[4/5] bg-black/5"></article>
+        <article class="aspect-square bg-black/5"></article>
+        <article class="aspect-[4/5] bg-black/5"></article>
+      }
+    </section>
+    @if (site.identity.about) {
+      <section
+        class="mx-auto grid max-w-[1500px] gap-7 border-t border-black/15 py-24 md:grid-cols-[220px_1fr]"
+        id="about"
+      >
+        <span class="text-xs font-black tracking-[0.2em] text-[var(--accent)]">PROFILO</span>
+        <p class="m-0 max-w-4xl font-display text-3xl leading-tight sm:text-5xl">
+          {{ site.identity.about }}
+        </p>
+      </section>
+    }
+    <footer
+      class="mx-auto grid max-w-[1500px] gap-10 border-t border-black/15 py-12 text-sm md:grid-cols-[1fr_auto]"
+      id="contact"
+    >
+      <div class="grid gap-2">
+        <strong class="text-lg">{{ site.identity.title }}</strong>
+        @if (site.contact?.location) {
+          <span class="text-black/60">{{ site.contact?.location }}</span>
+        }
+        @if (site.contact?.email) {
+          <a class="text-inherit" [href]="'mailto:' + site.contact?.email">{{
+            site.contact?.email
+          }}</a>
+        }
+        @if (site.contact?.phone) {
+          <a class="text-inherit" [href]="'tel:' + site.contact?.phone">{{
+            site.contact?.phone
+          }}</a>
+        }
+      </div>
+      <nav class="flex flex-wrap gap-5 md:justify-end">
+        @for (social of site.socials ?? []; track social.url) {
+          <a
+            class="font-bold text-inherit"
+            [href]="social.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ social.label }}</a
+          >
+        }
+      </nav>
+      <span class="text-xs text-black/45 md:col-span-2">Pubblicato con PortfolioHub</span>
+    </footer>
+  </main>
+} @else {
+  <div class="grid min-h-dvh place-items-center bg-canvas p-6 text-center text-sm text-ink-muted">
+    {{ error() || 'Caricamento portfolio…' }}
+  </div>
+}

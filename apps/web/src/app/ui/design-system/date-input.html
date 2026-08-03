@@ -1,0 +1,14 @@
+<span
+  class="flex min-h-11 items-center rounded-ui border border-stroke bg-panel-raised px-3.5 transition focus-within:border-brand/60 focus-within:ring-3 focus-within:ring-brand/10"
+>
+  <span class="mr-2 text-brand" aria-hidden="true">▣</span>
+  <input
+    class="min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none [color-scheme:dark] light:[color-scheme:light]"
+    type="date"
+    [placeholder]="placeholder()"
+    [value]="value()"
+    [disabled]="disabled()"
+    (input)="update($any($event.target).value)"
+    (blur)="onTouched()"
+  />
+</span>

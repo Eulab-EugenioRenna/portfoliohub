@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>PortfolioHub — App prototype</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --sidebar: #101729;
+        --surface: #121a2c;
+        --surface-2: #172136;
+        --surface-3: #1c2840;
+        --text: #eef3ff;
+        --muted: #8e9ab4;
+        --line: rgba(151, 169, 205, 0.14);
+        --blue: #3b82f6;
+        --blue-2: #2563eb;
+        --cyan: #22d3ee;
+        --success: #35c98b;
+        --warning: #f7b84b;
+        --danger: #f16d7a;
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.24);
+        --sidebar-width: 258px;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      html[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f4f7fc;
+        --sidebar: #ffffff;
+        --surface: #ffffff;
+        --surface-2: #f7f9fd;
+        --surface-3: #edf2fa;
+        --text: #172033;
+        --muted: #69758c;
+        --line: rgba(32, 50, 82, 0.12);
+        --shadow: 0 18px 55px rgba(44, 62, 96, 0.1);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+      button, input, select { font: inherit; }
+      button { color: inherit; }
+      button:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(59, 130, 246, .34);
+        outline-offset: 2px;
+      }
+
+      .app { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); transition: grid-template-columns 220ms ease; }
+      .app.collapsed { --sidebar-width: 78px; }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 18px 14px;
+        border-right: 1px solid var(--line);
+        background: var(--sidebar);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 10;
+      }
+      .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 42px; padding: 0 4px; }
+      .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+      .brand-mark { width: 36px; height: 36px; flex: none; border-radius: 11px; display: grid; place-items: center; color: white; font-size: 17px; font-weight: 800; background: linear-gradient(135deg, #60a5fa 0%, #2563eb 52%, #4338ca 100%); box-shadow: 0 9px 24px rgba(37, 99, 235, .34); }
+      .brand-name { font-weight: 750; letter-spacing: -.025em; white-space: nowrap; }
+      .collapse-button, .icon-button { border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; display: grid; place-items: center; }
+      .collapse-button { width: 30px; height: 30px; border-radius: 9px; flex: none; }
+      .collapse-button svg { transition: transform 220ms ease; }
+      .collapsed .collapse-button { position: fixed; left: 61px; top: 24px; box-shadow: var(--shadow); }
+      .collapsed .collapse-button svg { transform: rotate(180deg); }
+
+      .workspace {
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        border-radius: 12px;
+        margin: 22px 0 20px;
+        padding: 10px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        cursor: pointer;
+        min-height: 54px;
+      }
+      .workspace-avatar, .avatar { border-radius: 10px; display: grid; place-items: center; font-weight: 750; color: white; background: linear-gradient(135deg, #475569, #1e293b); flex: none; }
+      .workspace-avatar { width: 32px; height: 32px; font-size: 11px; }
+      .workspace-copy { min-width: 0; flex: 1; }
+      .workspace-copy strong, .workspace-copy small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .workspace-copy strong { font-size: 12px; }
+      .workspace-copy small { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+      .nav-label { color: var(--muted); font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: .13em; padding: 0 12px; margin: 9px 0 7px; white-space: nowrap; }
+      .nav { display: grid; gap: 4px; }
+      .nav-button {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 12px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .nav-button:hover { color: var(--text); background: var(--surface-2); }
+      .nav-button.active { color: white; background: linear-gradient(115deg, rgba(37,99,235,.92), rgba(59,130,246,.72)); box-shadow: 0 8px 22px rgba(37, 99, 235, .22); }
+      html[data-theme="light"] .nav-button.active { color: white; }
+      .nav-icon { width: 20px; height: 20px; display: grid; place-items: center; flex: none; }
+      .nav-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }
+      .nav-badge { margin-left: auto; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--surface-3); display: grid; place-items: center; font-size: 10px; font-weight: 750; }
+      .nav-button.active .nav-badge { background: rgba(255,255,255,.2); }
+      .sidebar-bottom { margin-top: auto; }
+      .storage { margin: 14px 10px; }
+      .storage-copy { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 10px; margin-bottom: 7px; white-space: nowrap; }
+      .storage-track { height: 5px; border-radius: 99px; overflow: hidden; background: var(--surface-3); }
+      .storage-track span { display: block; width: 38%; height: 100%; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+
+      .collapsed .brand-name,
+      .collapsed .workspace-copy,
+      .collapsed .workspace > svg,
+      .collapsed .nav-label,
+      .collapsed .nav-button > span:not(.nav-icon),
+      .collapsed .nav-badge,
+      .collapsed .storage { display: none; }
+      .collapsed .workspace { justify-content: center; padding: 9px; }
+      .collapsed .nav-button { justify-content: center; padding: 9px; }
+
+      .shell { min-width: 0; }
+      .topbar {
+        height: 72px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 0 28px;
+        position: sticky;
+        top: 0;
+        z-index: 8;
+      }
+      .breadcrumb { min-width: 0; }
+      .breadcrumb small { display: block; color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+      .breadcrumb strong { font-size: 14px; }
+      .top-actions { display: flex; align-items: center; gap: 8px; }
+      .search { width: min(290px, 26vw); height: 39px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 10px; padding: 0 13px; }
+      .search::placeholder { color: var(--muted); }
+      .icon-button { width: 39px; height: 39px; border-radius: 10px; }
+      .icon-button:hover { border-color: rgba(59,130,246,.45); background: var(--surface-3); }
+      .avatar { width: 38px; height: 38px; font-size: 11px; margin-left: 3px; }
+
+      .content { padding: 28px; max-width: 1540px; margin: 0 auto; }
+      .hero {
+        min-height: 228px;
+        border-radius: 18px;
+        padding: 32px;
+        color: white;
+        background:
+          radial-gradient(circle at 84% 18%, rgba(34,211,238,.32), transparent 25%),
+          radial-gradient(circle at 67% 110%, rgba(129,140,248,.5), transparent 34%),
+          linear-gradient(120deg, #1d4ed8 0%, #2563eb 45%, #4f46e5 100%);
+        box-shadow: 0 22px 55px rgba(24, 78, 190, .23);
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr);
+        gap: 40px;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::after { content: ""; position: absolute; right: -75px; top: -100px; width: 310px; height: 310px; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; box-shadow: 0 0 0 44px rgba(255,255,255,.035), 0 0 0 88px rgba(255,255,255,.025); }
+      .hero-copy, .hero-progress { position: relative; z-index: 1; }
+      .hero-kicker { font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; opacity: .72; }
+      .hero h1 { font-size: clamp(28px, 3.8vw, 52px); letter-spacing: -.045em; line-height: 1.04; margin: 10px 0 12px; max-width: 730px; }
+      .hero p { margin: 0; opacity: .78; line-height: 1.55; max-width: 600px; }
+      .hero-actions { margin-top: 24px; display: flex; gap: 9px; flex-wrap: wrap; }
+      .button { border: 0; border-radius: 10px; min-height: 40px; padding: 0 15px; font-weight: 700; cursor: pointer; transition: transform 140ms ease, filter 140ms ease; }
+      .button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+      .button-primary { background: white; color: #1747ad; }
+      .button-secondary { color: white; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); }
+      .button-blue { color: white; background: linear-gradient(115deg, var(--blue-2), var(--blue)); box-shadow: 0 8px 22px rgba(37,99,235,.22); }
+      .button-neutral { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); }
+      .hero-progress { background: rgba(10, 27, 78, .28); border: 1px solid rgba(255,255,255,.18); border-radius: 15px; padding: 20px; backdrop-filter: blur(10px); }
+      .hero-progress-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+      .hero-progress small { opacity: .72; }
+      .steps { display: grid; gap: 10px; }
+      .step { display: grid; grid-template-columns: 23px 1fr; gap: 9px; align-items: center; font-size: 12px; }
+      .step-mark { width: 23px; height: 23px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); font-size: 10px; font-weight: 800; }
+      .step.done .step-mark { background: white; color: var(--blue-2); }
+
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+      .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 6px 25px rgba(0,0,0,.035); }
+      .metric { padding: 19px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+      .metric small { display: block; color: var(--muted); margin-bottom: 6px; }
+      .metric strong { font-size: 24px; letter-spacing: -.03em; }
+      .metric-icon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; color: #72a7ff; background: rgba(59,130,246,.13); }
+
+      .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(290px, .45fr); gap: 18px; }
+      .panel-head { min-height: 66px; padding: 16px 19px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .panel-head h2 { margin: 0; font-size: 15px; }
+      .panel-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; min-width: 690px; }
+      th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 750; text-align: left; padding: 11px 18px; background: var(--surface-2); }
+      td { padding: 15px 18px; border-top: 1px solid var(--line); font-size: 12px; }
+      tbody tr { cursor: pointer; }
+      tbody tr:hover { background: var(--surface-2); }
+      .project-cell { display: flex; gap: 11px; align-items: center; }
+      .project-thumb { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, #233d73, #2b77ae); flex: none; }
+      .project-cell strong, .project-cell small { display: block; }
+      .project-cell small { color: var(--muted); margin-top: 3px; }
+      .status { display: inline-flex; gap: 6px; align-items: center; padding: 5px 8px; border-radius: 999px; background: rgba(53,201,139,.1); color: var(--success); font-size: 10px; font-weight: 750; white-space: nowrap; }
+      .status.waiting { background: rgba(247,184,75,.1); color: var(--warning); }
+      .status.draft { background: var(--surface-3); color: var(--muted); }
+      .status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+      .side-stack { display: grid; gap: 18px; align-content: start; }
+      .side-card { padding: 19px; }
+      .side-card h3 { font-size: 14px; margin: 0 0 5px; }
+      .side-card > p { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0 0 17px; }
+      .activity { display: grid; gap: 15px; }
+      .activity-item { display: grid; grid-template-columns: 28px 1fr; gap: 10px; }
+      .activity-mark { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; color: #72a7ff; background: rgba(59,130,246,.12); font-size: 11px; }
+      .activity-item p { margin: 0; font-size: 11px; line-height: 1.4; }
+      .activity-item small { display: block; color: var(--muted); margin-top: 3px; }
+
+      dialog { width: min(540px, calc(100vw - 30px)); border: 1px solid var(--line); border-radius: 16px; padding: 0; color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
+      dialog::backdrop { background: rgba(2, 6, 18, .72); backdrop-filter: blur(5px); }
+      .dialog-body { padding: 24px; }
+      .dialog-head { display: flex; justify-content: space-between; gap: 15px; align-items: start; margin-bottom: 21px; }
+      .dialog-head h2 { margin: 0 0 5px; font-size: 21px; }
+      .dialog-head p { margin: 0; color: var(--muted); font-size: 12px; }
+      .field { display: grid; gap: 7px; margin: 14px 0; }
+      .field label { font-size: 11px; font-weight: 750; }
+      .field input, .field select { width: 100%; height: 42px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--text); padding: 0 12px; }
+      .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 21px; }
+      .link-types { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .link-type { border: 1px solid var(--line); border-radius: 11px; padding: 13px; text-align: left; background: var(--surface-2); cursor: pointer; }
+      .link-type.active { border-color: var(--blue); background: rgba(59,130,246,.1); box-shadow: inset 0 0 0 1px var(--blue); }
+      .link-type strong, .link-type small { display: block; }
+      .link-type strong { font-size: 12px; margin-bottom: 4px; }
+      .link-type small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+
+      .toast { position: fixed; right: 20px; top: 88px; z-index: 40; padding: 12px 15px; border: 1px solid rgba(89,143,255,.35); border-radius: 11px; background: #172342; color: white; box-shadow: var(--shadow); font-size: 12px; opacity: 0; transform: translateY(-8px); pointer-events: none; transition: 180ms ease; }
+      .toast.show { opacity: 1; transform: translateY(0); }
+      .prototype-tag { position: fixed; bottom: 12px; right: 14px; z-index: 30; padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+
+      @media (max-width: 1080px) {
+        .metrics { grid-template-columns: repeat(2, 1fr); }
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .side-stack { grid-template-columns: 1fr 1fr; }
+      }
+
+      @media (max-width: 760px) {
+        :root { --sidebar-width: 78px; }
+        .brand-name, .workspace-copy, .workspace > svg, .nav-label, .nav-button > span:not(.nav-icon), .nav-badge, .storage { display: none; }
+        .workspace, .nav-button { justify-content: center; padding: 9px; }
+        .collapse-button { display: none; }
+        .topbar { padding: 0 16px; }
+        .search { display: none; }
+        .content { padding: 18px 14px; }
+        .hero { grid-template-columns: 1fr; padding: 24px; }
+        .hero-progress { display: none; }
+        .metrics { grid-template-columns: 1fr 1fr; gap: 9px; }
+        .metric { padding: 14px; }
+        .metric-icon { display: none; }
+        .side-stack { grid-template-columns: 1fr; }
+        .link-types { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <div class="brand"><span class="brand-mark">P</span><span class="brand-name">PortfolioHub</span></div>
+          <button class="collapse-button" id="collapse" aria-label="Richiudi sidebar" title="Richiudi sidebar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+
+        <button class="workspace">
+          <span class="workspace-avatar">SR</span>
+          <span class="workspace-copy"><strong>Studio Renna</strong><small>Workspace Pro</small></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <span class="nav-label">Workspace</span>
+        <nav class="nav" aria-label="Navigazione principale">
+          <button class="nav-button active" data-page="Panoramica"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span>Panoramica</span></button>
+          <button class="nav-button" data-page="Progetti"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h4"/></svg></span><span>Progetti</span><span class="nav-badge">3</span></button>
+          <button class="nav-button" data-page="Clienti"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 3.5a4 4 0 0 1 0 7.5M17 15a6 6 0 0 1 4 5.7"/></svg></span><span>Clienti</span></button>
+          <button class="nav-button" data-page="Consegne"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7"/><path d="M12 12v9m0 0 4-4m-4 4-4-4"/></svg></span><span>Consegne</span><span class="nav-badge">2</span></button>
+          <button class="nav-button" data-page="Portfolio"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span><span>Portfolio</span></button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <span class="nav-label">Gestione</span>
+          <nav class="nav" aria-label="Navigazione di gestione">
+            <button class="nav-button" data-page="Team"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 20a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 4"/></svg></span><span>Team</span></button>
+            <button class="nav-button" data-page="Impostazioni"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9A1.7 1.7 0 0 0 21 10h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span>Impostazioni</span></button>
+          </nav>
+          <div class="storage"><div class="storage-copy"><span>Storage</span><span>19 / 50 GB</span></div><div class="storage-track"><span></span></div></div>
+        </div>
+      </aside>
+
+      <section class="shell">
+        <header class="topbar">
+          <div class="breadcrumb"><small>Studio Renna</small><strong id="page-title">Panoramica</strong></div>
+          <div class="top-actions">
+            <input class="search" type="search" placeholder="Cerca progetti, clienti o file…" aria-label="Cerca" />
+            <button class="icon-button" id="theme" aria-label="Cambia tema" title="Cambia tema">
+              <svg id="theme-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+            </button>
+            <button class="icon-button" aria-label="Notifiche" title="Notifiche"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
+            <span class="avatar">ER</span>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="hero">
+            <div class="hero-copy">
+              <span class="hero-kicker">Bentornato, Eugenio</span>
+              <h1>Il prossimo lavoro è quasi pronto per il cliente.</h1>
+              <p>Completa Luce / SS26: carica gli ultimi file, verifica l’accesso e genera il link di consegna.</p>
+              <div class="hero-actions"><button class="button button-primary" data-share>Continua la consegna</button><button class="button button-secondary" data-new-project>Nuovo progetto</button></div>
+            </div>
+            <div class="hero-progress">
+              <div class="hero-progress-head"><strong>Luce / SS26</strong><small>2 di 3 completati</small></div>
+              <div class="steps"><div class="step done"><span class="step-mark">✓</span><span>Progetto creato</span></div><div class="step done"><span class="step-mark">✓</span><span>File caricati</span></div><div class="step"><span class="step-mark">3</span><span>Genera il link cliente</span></div></div>
+            </div>
+          </section>
+
+          <section class="metrics" aria-label="Indicatori principali">
+            <article class="card metric"><div><small>Progetti attivi</small><strong>3</strong></div><span class="metric-icon">▣</span></article>
+            <article class="card metric"><div><small>Consegne aperte</small><strong>2</strong></div><span class="metric-icon">↓</span></article>
+            <article class="card metric"><div><small>Clienti</small><strong>8</strong></div><span class="metric-icon">◎</span></article>
+            <article class="card metric"><div><small>Storage usato</small><strong>38%</strong></div><span class="metric-icon">◫</span></article>
+          </section>
+
+          <section class="dashboard-grid">
+            <article class="card">
+              <header class="panel-head"><div><h2>Progetti recenti</h2><p>Stato dei lavori che richiedono attenzione.</p></div><button class="button button-neutral" data-new-project>Nuovo progetto</button></header>
+              <div class="table-wrap"><table><thead><tr><th>Progetto</th><th>Cliente</th><th>Stato</th><th>Aggiornato</th><th></th></tr></thead><tbody>
+                <tr><td><div class="project-cell"><span class="project-thumb"></span><span><strong>Luce / SS26</strong><small>48 file</small></span></div></td><td>Atelier Forma</td><td><span class="status"><i></i>In consegna</span></td><td>12 min fa</td><td>•••</td></tr>
+                <tr><td><div class="project-cell"><span class="project-thumb" style="background:linear-gradient(135deg,#4d315d,#a05a84)"></span><span><strong>Ritratto editoriale</strong><small>126 file</small></span></div></td><td>Marta Belli</td><td><span class="status waiting"><i></i>Attende cliente</span></td><td>Ieri</td><td>•••</td></tr>
+                <tr><td><div class="project-cell"><span class="project-thumb" style="background:linear-gradient(135deg,#344539,#628062)"></span><span><strong>Casa Farina</strong><small>31 file</small></span></div></td><td>Studio Onde</td><td><span class="status draft"><i></i>Bozza</span></td><td>28 lug</td><td>•••</td></tr>
+              </tbody></table></div>
+            </article>
+
+            <aside class="side-stack">
+              <article class="card side-card"><h3>Accessi chiari</h3><p>Scegli sempre se stai consegnando a un cliente o invitando un collaboratore.</p><button class="button button-blue" style="width:100%" data-share>Crea un accesso</button></article>
+              <article class="card side-card"><h3>Attività recente</h3><p>Ultime azioni nel workspace.</p><div class="activity"><div class="activity-item"><span class="activity-mark">✓</span><div><p>Atelier Forma ha approvato 12 file.</p><small>18 minuti fa</small></div></div><div class="activity-item"><span class="activity-mark">↑</span><div><p>Laura ha caricato 7 file in Casa Farina.</p><small>2 ore fa</small></div></div><div class="activity-item"><span class="activity-mark">↗</span><div><p>Link di consegna aperto da Marta.</p><small>Ieri</small></div></div></div></article>
+            </aside>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <dialog id="project-dialog">
+      <form method="dialog" class="dialog-body" id="project-form">
+        <div class="dialog-head"><div><h2>Nuovo progetto</h2><p>Il cliente può essere associato ora o in seguito.</p></div><button class="icon-button" value="cancel" aria-label="Chiudi">×</button></div>
+        <div class="field"><label for="project-name">Nome progetto</label><input id="project-name" value="Campagna estate" required /></div>
+        <div class="field"><label for="project-client">Cliente</label><select id="project-client"><option>Atelier Forma</option><option>Nuovo cliente…</option></select></div>
+        <div class="dialog-actions"><button class="button button-neutral" value="cancel">Annulla</button><button class="button button-blue" value="default">Crea progetto</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="share-dialog">
+      <div class="dialog-body">
+        <div class="dialog-head"><div><h2>Scegli il tipo di accesso</h2><p>Consegna e collaborazione restano due flussi separati.</p></div><button class="icon-button" data-close-share aria-label="Chiudi">×</button></div>
+        <div class="link-types">
+          <button class="link-type active" data-link-kind="delivery"><strong>Consegna al cliente</strong><small>Può visualizzare, scaricare, commentare o approvare senza entrare nel workspace.</small></button>
+          <button class="link-type" data-link-kind="collab"><strong>Invita collaboratore</strong><small>Richiede autenticazione e assegna ruolo e ambito operativo.</small></button>
+        </div>
+        <div class="field"><label for="recipient">Destinatario</label><input id="recipient" value="cliente@atelierforma.it" /></div>
+        <div class="field"><label for="access">Accesso</label><select id="access"><option>Visualizza, commenta e approva</option><option>Visualizza e scarica</option><option>Solo visualizzazione</option></select></div>
+        <div class="dialog-actions"><button class="button button-neutral" data-close-share>Annulla</button><button class="button button-blue" id="generate">Genera link</button></div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="prototype-tag">Prototipo UI · v2</div>
+
+    <script>
+      const app = document.getElementById('app');
+      const root = document.documentElement;
+      const projectDialog = document.getElementById('project-dialog');
+      const shareDialog = document.getElementById('share-dialog');
+      const toast = document.getElementById('toast');
+
+      document.getElementById('collapse').addEventListener('click', () => {
+        app.classList.toggle('collapsed');
+        const collapsed = app.classList.contains('collapsed');
+        document.getElementById('collapse').setAttribute('aria-label', collapsed ? 'Espandi sidebar' : 'Richiudi sidebar');
+      });
+
+      document.getElementById('theme').addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        showToast(root.dataset.theme === 'dark' ? 'Modalità scura attiva' : 'Modalità chiara attiva');
+      });
+
+      document.querySelectorAll('.nav-button').forEach((button) => button.addEventListener('click', () => {
+        document.querySelectorAll('.nav-button').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        document.getElementById('page-title').textContent = button.dataset.page;
+        showToast(`${button.dataset.page}: destinazione collegata nel prototipo`);
+      }));
+
+      document.querySelectorAll('[data-new-project]').forEach((button) => button.addEventListener('click', () => projectDialog.showModal()));
+      document.querySelectorAll('[data-share]').forEach((button) => button.addEventListener('click', () => shareDialog.showModal()));
+      document.querySelectorAll('[data-close-share]').forEach((button) => button.addEventListener('click', () => shareDialog.close()));
+
+      document.getElementById('project-form').addEventListener('submit', (event) => {
+        if (event.submitter?.value === 'cancel') return;
+        event.preventDefault();
+        projectDialog.close();
+        showToast('Progetto creato · prossimo passo: carica i file');
+      });
+
+      document.querySelectorAll('[data-link-kind]').forEach((button) => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-link-kind]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        const collaboration = button.dataset.linkKind === 'collab';
+        document.getElementById('recipient').value = collaboration ? 'collaboratore@studio.it' : 'cliente@atelierforma.it';
+        document.getElementById('access').innerHTML = collaboration
+          ? '<option>Editor sul progetto</option><option>Uploader sulla cartella</option><option>Viewer sul progetto</option>'
+          : '<option>Visualizza, commenta e approva</option><option>Visualizza e scarica</option><option>Solo visualizzazione</option>';
+      }));
+
+      document.getElementById('generate').addEventListener('click', () => {
+        shareDialog.close();
+        showToast('Link generato e pronto da copiare');
+      });
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2200);
+      }
+    </script>
+  </body>
+</html>

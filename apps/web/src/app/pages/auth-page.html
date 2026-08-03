@@ -1,0 +1,237 @@
+<main class="grid min-h-dvh bg-canvas lg:grid-cols-[minmax(0,1.1fr)_minmax(440px,.9fr)]">
+  <section
+    class="relative hidden overflow-hidden border-r border-stroke bg-sidebar p-10 lg:flex lg:flex-col lg:justify-between xl:p-16"
+  >
+    <div
+      class="pointer-events-none absolute -top-40 -left-32 size-[560px] rounded-full bg-brand/20 blur-3xl"
+    ></div>
+    <a class="relative flex items-center gap-3 text-ink no-underline" routerLink="/"
+      ><span
+        class="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep text-lg font-black text-white shadow-float"
+        >P</span
+      ><strong class="text-lg">PortfolioHub</strong></a
+    >
+    <div class="relative max-w-3xl">
+      <span class="text-xs font-black tracking-[0.16em] text-brand uppercase"
+        >File collaboration & delivery</span
+      >
+      <h1
+        class="mt-5 font-display text-5xl leading-[1.05] font-normal tracking-[-0.055em] text-ink xl:text-7xl"
+      >
+        Il lavoro resta tuo.<br />La consegna diventa semplice.
+      </h1>
+      <p class="mt-6 max-w-2xl text-base leading-8 text-ink-muted xl:text-lg">
+        Un luogo ordinato per collaborare, presentare e consegnare file professionali senza perdere
+        il controllo.
+      </p>
+    </div>
+    <div
+      class="relative flex max-w-md items-center gap-4 rounded-card border border-stroke bg-panel/80 p-4 backdrop-blur-xl"
+    >
+      <span
+        class="grid size-11 shrink-0 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+        >CL</span
+      >
+      <p class="m-0">
+        <strong class="block text-sm text-ink">Il cliente vede il lavoro.</strong
+        ><small class="mt-1 block text-xs text-ink-muted"
+          >Non il tuo workspace, non gli altri studi.</small
+        >
+      </p>
+    </div>
+  </section>
+
+  <section class="grid min-h-dvh place-items-center p-5 sm:p-10">
+    <div
+      class="w-full max-w-[510px] animate-rise rounded-shell border border-stroke bg-panel p-6 shadow-float sm:p-10"
+    >
+      @if (pendingVerification()) {
+        <span
+          class="mb-6 grid size-14 place-items-center rounded-2xl bg-positive/12 text-2xl text-positive"
+          >↗</span
+        ><span class="text-xs font-black tracking-[0.16em] text-brand uppercase">Quasi fatto</span>
+        <h2 class="mt-3 text-3xl font-extrabold tracking-[-0.04em]">Controlla la tua email.</h2>
+        <p class="mt-3 text-sm leading-7 text-ink-muted">
+          Abbiamo preparato il workspace e inviato il link di verifica. In locale il messaggio è
+          nella mailbox dell’adapter.
+        </p>
+        <a
+          class="mt-7 flex min-h-12 w-full items-center justify-center rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink no-underline transition hover:border-brand/40"
+          routerLink="/accedi"
+          >Torna all’accesso</a
+        >
+      } @else {
+        <span class="text-xs font-black tracking-[0.16em] text-brand uppercase">{{
+          mode() === 'login'
+            ? 'Bentornato'
+            : mode() === 'signup'
+              ? 'Inizia ora'
+              : 'Verifica identità'
+        }}</span>
+        <h2 class="mt-3 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">
+          {{
+            mode() === 'login'
+              ? 'Accedi al workspace'
+              : mode() === 'signup'
+                ? 'Crea il tuo spazio'
+                : 'Conferma la tua email'
+          }}
+        </h2>
+        <p class="mt-3 text-sm leading-7 text-ink-muted">
+          {{
+            mode() === 'login'
+              ? 'Riprendi progetti e consegne dal punto esatto in cui li hai lasciati.'
+              : mode() === 'signup'
+                ? 'Un progetto gratuito, fino a 50 GB. Puoi cambiare piano quando serve.'
+                : 'Il token può essere usato una sola volta.'
+          }}
+        </p>
+        <form class="mt-8 grid gap-5" (submit)="$event.preventDefault(); submit()">
+          @if (mode() === 'signup') {
+            <label class="grid gap-2 text-sm font-bold text-ink"
+              >Il tuo nome<input
+                class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
+                name="displayName"
+                type="text"
+                placeholder="Mario Rossi"
+                [(ngModel)]="displayName"
+                autocomplete="name"
+                required
+                minlength="2"
+            /></label>
+            <label class="grid gap-2 text-sm font-bold text-ink"
+              >Nome workspace<input
+                class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
+                name="workspaceName"
+                type="text"
+                placeholder="Studio creativo"
+                [(ngModel)]="workspaceName"
+                required
+                minlength="2"
+            /></label>
+            <div
+              class="grid grid-cols-2 gap-2 rounded-card border border-stroke bg-panel-raised p-2"
+            >
+              <button
+                type="button"
+                class="min-h-16 rounded-ui border px-4 text-left transition"
+                [class]="
+                  workspaceType === 'freelance'
+                    ? 'border-brand bg-brand/12 text-ink'
+                    : 'border-transparent bg-transparent text-ink-muted hover:bg-panel-strong'
+                "
+                (click)="workspaceType = 'freelance'"
+              >
+                <strong class="block text-sm">Freelance</strong
+                ><small class="mt-1 block text-xs font-normal">Lavori in autonomia</small></button
+              ><button
+                type="button"
+                class="min-h-16 rounded-ui border px-4 text-left transition"
+                [class]="
+                  workspaceType === 'studio'
+                    ? 'border-brand bg-brand/12 text-ink'
+                    : 'border-transparent bg-transparent text-ink-muted hover:bg-panel-strong'
+                "
+                (click)="workspaceType = 'studio'"
+              >
+                <strong class="block text-sm">Studio</strong
+                ><small class="mt-1 block text-xs font-normal">Collabori con un team</small>
+              </button>
+            </div>
+          }
+          @if (mode() !== 'verify') {
+            <label class="grid gap-2 text-sm font-bold text-ink"
+              >Email<input
+                class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
+                name="email"
+                type="email"
+                placeholder="nome@studio.it"
+                [(ngModel)]="email"
+                autocomplete="email"
+                required
+            /></label>
+            <label class="grid gap-2 text-sm font-bold text-ink"
+              >Password<input
+                class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
+                name="password"
+                type="password"
+                placeholder="Almeno 12 caratteri"
+                [(ngModel)]="password"
+                [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+                required
+                minlength="12"
+            /></label>
+          } @else {
+            <label class="grid gap-2 text-sm font-bold text-ink"
+              >Token di verifica<input
+                class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
+                name="token"
+                type="text"
+                placeholder="Incolla il token ricevuto"
+                [(ngModel)]="token"
+                required
+            /></label>
+          }
+          @if (error()) {
+            <div
+              class="rounded-ui border border-negative/30 bg-negative/8 p-3 text-sm text-negative"
+              role="alert"
+            >
+              {{ error() }}
+            </div>
+          }
+          @if (blockedSessions().length) {
+            <div class="grid gap-2" aria-label="Sessioni attive da revocare">
+              @for (session of blockedSessions(); track session.id) {
+                <div
+                  class="flex items-center gap-3 rounded-ui border border-stroke bg-panel-raised p-3"
+                >
+                  <div class="min-w-0 flex-1">
+                    <strong class="block truncate text-sm text-ink">
+                      {{ session.userAgent || 'Dispositivo non identificato' }}
+                    </strong>
+                    <small class="mt-1 block text-xs text-ink-muted">
+                      IP {{ session.ipAddress || 'non disponibile' }}
+                    </small>
+                  </div>
+                  <button
+                    class="shrink-0 rounded-ui border border-negative/30 px-3 py-2 text-xs font-bold text-negative disabled:opacity-50"
+                    type="button"
+                    [disabled]="!!revokingSession()"
+                    (click)="revokeAndLogin(session.id)"
+                  >
+                    {{ revokingSession() === session.id ? 'Revoca…' : 'Revoca e accedi' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <button
+            class="min-h-12 w-full rounded-ui border-0 bg-gradient-to-br from-brand-deep to-brand px-5 text-sm font-extrabold text-white shadow-[0_12px_30px_rgba(30,92,219,.28)] transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
+            type="submit"
+            [disabled]="auth.loading()"
+          >
+            {{
+              auth.loading()
+                ? 'Attendi…'
+                : mode() === 'login'
+                  ? 'Accedi'
+                  : mode() === 'signup'
+                    ? 'Crea account'
+                    : 'Verifica e accedi'
+            }}
+          </button>
+        </form>
+        <footer class="mt-7 border-t border-stroke pt-6 text-center text-sm text-ink-muted">
+          @if (mode() === 'login') {
+            <span>Non hai un account?</span>
+            <a class="font-bold text-brand" routerLink="/registrati">Registrati</a>
+          } @else {
+            <span>Hai già un account?</span>
+            <a class="font-bold text-brand" routerLink="/accedi">Accedi</a>
+          }
+        </footer>
+      }
+    </div>
+  </section>
+</main>

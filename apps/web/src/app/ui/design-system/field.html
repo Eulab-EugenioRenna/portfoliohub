@@ -1,0 +1,15 @@
+<label class="grid gap-2 text-sm font-semibold text-ink">
+  <span>{{ label() }}</span>
+  <span
+    class="[&>input]:min-h-11 [&>input]:w-full [&>input]:rounded-ui [&>input]:border [&>input]:border-stroke [&>input]:bg-panel-raised [&>input]:px-3.5 [&>input]:text-sm [&>input]:text-ink [&>input]:outline-none [&>input]:transition [&>input]:placeholder:text-ink-muted/70 [&>input]:focus:border-brand/60 [&>input]:focus:ring-3 [&>input]:focus:ring-brand/10 [&>textarea]:min-h-28 [&>textarea]:w-full [&>textarea]:rounded-ui [&>textarea]:border [&>textarea]:border-stroke [&>textarea]:bg-panel-raised [&>textarea]:p-3.5 [&>textarea]:text-sm [&>textarea]:text-ink [&>textarea]:outline-none [&>textarea]:focus:border-brand/60 [&>textarea]:focus:ring-3 [&>textarea]:focus:ring-brand/10"
+    [class.[&>input]:border-negative]="error()"
+    [class.[&>input]:ring-negative/10]="error()"
+  >
+    <ng-content />
+  </span>
+  @if (error()) {
+    <small class="text-xs leading-5 font-normal text-negative">{{ error() }}</small>
+  } @else if (hint()) {
+    <small class="text-xs leading-5 font-normal text-ink-muted">{{ hint() }}</small>
+  }
+</label>

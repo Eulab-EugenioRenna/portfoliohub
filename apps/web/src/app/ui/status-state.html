@@ -1,0 +1,40 @@
+<section
+  class="grid min-h-72 place-items-center content-center gap-5 rounded-shell border border-dashed border-stroke bg-panel p-10 text-center"
+  [attr.data-kind]="kind()"
+  role="status"
+>
+  <span
+    class="grid size-14 place-items-center rounded-2xl bg-brand/12 text-xl font-black text-brand"
+    aria-hidden="true"
+  >
+    @switch (kind()) {
+      @case ('loading') {
+        <span
+          class="size-6 animate-spin rounded-full border-2 border-current border-r-transparent"
+        ></span>
+      }
+      @case ('empty') {
+        ◌
+      }
+      @case ('error') {
+        !
+      }
+      @case ('blocked') {
+        ⊘
+      }
+    }
+  </span>
+  <div>
+    <h2 class="text-xl font-extrabold">{{ title() }}</h2>
+    <p class="mx-auto mt-2 max-w-xl text-sm leading-7 text-ink-muted">{{ description() }}</p>
+  </div>
+  @if (actionLabel()) {
+    <button
+      class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+      type="button"
+      (click)="action.emit()"
+    >
+      {{ actionLabel() }}
+    </button>
+  }
+</section>

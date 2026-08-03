@@ -1,0 +1,40 @@
+<aside
+  class="animate-rise rounded-card border p-4 shadow-float backdrop-blur-xl"
+  [class]="toneClasses()"
+  role="status"
+  aria-live="polite"
+>
+  <div class="flex items-start gap-3">
+    <span
+      class="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-current/10 font-black"
+      aria-hidden="true"
+    >
+      {{
+        tone() === 'success' ? '✓' : tone() === 'warning' ? '!' : tone() === 'danger' ? '×' : 'i'
+      }}
+    </span>
+    <div class="min-w-0 flex-1 text-ink">
+      <strong class="block text-sm font-extrabold">{{ title() }}</strong>
+      <p class="mt-1 text-sm leading-6 text-ink-muted">{{ message() }}</p>
+      @if (actionLabel()) {
+        <button
+          class="mt-2 border-0 bg-transparent p-0 text-sm font-extrabold text-current underline-offset-4 hover:underline"
+          type="button"
+          (click)="action.emit()"
+        >
+          {{ actionLabel() }} →
+        </button>
+      }
+    </div>
+    @if (dismissible()) {
+      <button
+        class="grid size-8 shrink-0 place-items-center rounded-lg border-0 bg-current/8 text-current transition hover:bg-current/15"
+        type="button"
+        aria-label="Chiudi notifica"
+        (click)="closed.emit()"
+      >
+        ×
+      </button>
+    }
+  </div>
+</aside>

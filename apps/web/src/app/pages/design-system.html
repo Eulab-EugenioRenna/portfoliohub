@@ -1,0 +1,265 @@
+<div class="mx-auto grid w-full max-w-[1440px] gap-7 xl:grid-cols-[240px_minmax(0,1fr)]">
+  <aside class="self-start xl:sticky xl:top-5">
+    <div class="rounded-card border border-stroke bg-panel p-4">
+      <span class="text-xs font-black tracking-[0.16em] text-brand uppercase">PortfolioHub UI</span>
+      <h1 class="mt-2 text-2xl font-extrabold tracking-[-0.04em] text-ink">Design system</h1>
+      <p class="mt-2 text-sm leading-6 text-ink-muted">
+        Regole e componenti condivisi dell’applicazione.
+      </p>
+      <nav class="mt-6 grid gap-1" aria-label="Categorie design system">
+        @for (category of categories; track category.id) {
+          <a
+            class="group flex min-h-11 items-center justify-between rounded-ui px-3 text-sm font-semibold text-ink-muted transition hover:bg-panel-raised hover:text-ink"
+            [href]="'#' + category.id"
+          >
+            <span>{{ category.label }}</span>
+            <small class="font-mono text-[0.65rem] text-ink-muted/60 group-hover:text-brand">
+              {{ category.index }}
+            </small>
+          </a>
+        }
+      </nav>
+    </div>
+  </aside>
+
+  <main class="min-w-0 animate-rise space-y-7 pb-20">
+    <section
+      id="principi"
+      class="relative overflow-hidden rounded-shell border border-stroke bg-panel p-7 md:p-10"
+    >
+      <div
+        class="absolute -top-32 -right-24 size-80 rounded-full border border-brand/20 shadow-[0_0_0_42px_rgba(61,139,253,.04)]"
+      ></div>
+      <div class="relative max-w-3xl">
+        <ph-badge>VERSIONE 1.0</ph-badge>
+        <h2
+          class="mt-8 font-display text-5xl leading-[0.95] tracking-[-0.055em] text-ink md:text-7xl"
+        >
+          Preciso nel lavoro.<br /><span class="text-brand">Calmo nell’uso.</span>
+        </h2>
+        <p class="mt-7 max-w-2xl text-base leading-7 text-ink-muted md:text-lg">
+          Gerarchia leggibile, superfici nette e azioni sempre esplicite. Il blu identifica ciò che
+          fa avanzare; il colore semantico comunica uno stato, mai decorazione.
+        </p>
+      </div>
+    </section>
+
+    <section id="tipografia" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Fondazioni"
+        title="Tipografia"
+        description="Una scala più generosa per ridurre densità e affaticamento nelle pagine operative."
+      />
+      <ph-card>
+        <div class="divide-y divide-stroke">
+          <div class="grid gap-4 py-5 md:grid-cols-[150px_1fr]">
+            <span class="font-mono text-xs text-ink-muted">Display / 72</span>
+            <strong
+              class="font-display text-5xl leading-none font-normal tracking-[-0.055em] md:text-7xl"
+              >Il lavoro parla.</strong
+            >
+          </div>
+          <div class="grid gap-4 py-5 md:grid-cols-[150px_1fr]">
+            <span class="font-mono text-xs text-ink-muted">Heading / 36</span>
+            <strong class="text-3xl font-extrabold tracking-[-0.04em] md:text-4xl"
+              >Impostazioni workspace</strong
+            >
+          </div>
+          <div class="grid gap-4 py-5 md:grid-cols-[150px_1fr]">
+            <span class="font-mono text-xs text-ink-muted">Section / 24</span>
+            <strong class="text-2xl font-extrabold tracking-[-0.025em]">Profilo e account</strong>
+          </div>
+          <div class="grid gap-4 py-5 md:grid-cols-[150px_1fr]">
+            <span class="font-mono text-xs text-ink-muted">Body / 16</span>
+            <p class="m-0 max-w-3xl text-base leading-7 text-ink">
+              Il testo principale usa almeno sedici pixel nelle superfici decisionali e nei piani.
+            </p>
+          </div>
+          <div class="grid gap-4 py-5 md:grid-cols-[150px_1fr]">
+            <span class="font-mono text-xs text-ink-muted">Meta / 12</span>
+            <span class="text-xs font-black tracking-[0.16em] text-brand uppercase"
+              >Stato verificato</span
+            >
+          </div>
+        </div>
+      </ph-card>
+    </section>
+
+    <section id="colori" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Fondazioni"
+        title="Colori"
+        description="Token semantici condivisi tra tema scuro e chiaro."
+      />
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-card border border-stroke bg-canvas p-4">
+          <i class="mb-8 block h-12 rounded-ui bg-canvas"></i><strong class="text-sm">Canvas</strong
+          ><small class="mt-1 block text-xs text-ink-muted">--color-canvas</small>
+        </div>
+        <div class="rounded-card border border-stroke bg-panel p-4">
+          <i class="mb-8 block h-12 rounded-ui bg-panel-raised"></i
+          ><strong class="text-sm">Surface</strong
+          ><small class="mt-1 block text-xs text-ink-muted">--color-panel</small>
+        </div>
+        <div class="rounded-card border border-stroke bg-panel p-4">
+          <i class="mb-8 block h-12 rounded-ui bg-brand"></i><strong class="text-sm">Brand</strong
+          ><small class="mt-1 block text-xs text-ink-muted">--color-brand</small>
+        </div>
+        <div class="rounded-card border border-stroke bg-panel p-4">
+          <i class="mb-8 block h-12 rounded-ui bg-positive"></i
+          ><strong class="text-sm">Positive</strong
+          ><small class="mt-1 block text-xs text-ink-muted">--color-positive</small>
+        </div>
+      </div>
+    </section>
+
+    <section id="azioni" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Componenti"
+        title="Azioni"
+        description="Quattro intensità, una gerarchia prevedibile."
+      />
+      <ph-card>
+        <div class="flex flex-wrap gap-3">
+          <ph-button>Continua →</ph-button>
+          <ph-button tone="outline">Salva bozza</ph-button>
+          <ph-button tone="ghost">Annulla</ph-button>
+          <ph-button tone="danger">Elimina</ph-button>
+          <ph-button [loading]="true">Elaborazione</ph-button>
+          <ph-button [disabled]="true">Non disponibile</ph-button>
+        </div>
+      </ph-card>
+    </section>
+
+    <section id="form" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Componenti"
+        title="Campi"
+        description="Label visibile, guida breve e focus riconoscibile."
+      />
+      <ph-card>
+        <div class="grid gap-6 lg:grid-cols-2">
+          <ph-field
+            label="Email con validazione"
+            hint="La validazione si aggiorna tramite Signal."
+            [error]="emailError()"
+          >
+            <input
+              type="email"
+              placeholder="nome@studio.it"
+              [value]="email()"
+              (input)="email.set($any($event.target).value)"
+              (blur)="emailTouched.set(true)"
+            />
+          </ph-field>
+          <ph-field label="Password" hint="Il valore può essere mostrato senza ricreare il campo.">
+            <ph-password-input [ngModel]="password()" (ngModelChange)="password.set($event)" />
+          </ph-field>
+          <ph-field label="Data consegna" hint="Controllo data coerente con il tema.">
+            <ph-date-input [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event)" />
+          </ph-field>
+          <ph-field label="Ruolo" hint="Select append-to-body con filtro full-text.">
+            <ph-select
+              [options]="roleOptions"
+              [filterable]="true"
+              [ngModel]="selectedRole()"
+              (ngModelChange)="selectedRole.set($event)"
+              ariaLabel="Ruolo workspace"
+              placeholder="Seleziona un ruolo"
+            />
+          </ph-field>
+          <ph-field label="Nota" hint="Massimo 500 caratteri.">
+            <textarea>Contesto utile per il team.</textarea>
+          </ph-field>
+        </div>
+      </ph-card>
+    </section>
+
+    <section id="superfici" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Componenti"
+        title="Superfici"
+        description="Le card raggruppano una sola decisione o responsabilità."
+      />
+      <div class="grid gap-4 md:grid-cols-2">
+        <ph-card
+          ><ph-badge>WORKSPACE</ph-badge>
+          <h3 class="mt-5 text-xl font-extrabold">Identità dello studio</h3>
+          <p class="mt-2 text-sm leading-6 text-ink-muted">
+            Nome, tipo e configurazione dello spazio condiviso.
+          </p></ph-card
+        >
+        <ph-card
+          ><ph-badge>SICUREZZA</ph-badge>
+          <h3 class="mt-5 text-xl font-extrabold">Credenziali protette</h3>
+          <p class="mt-2 text-sm leading-6 text-ink-muted">
+            Password, sessioni e operazioni che richiedono conferma.
+          </p></ph-card
+        >
+      </div>
+      <div class="mt-4">
+        <ph-data-table
+          [columns]="tableColumns"
+          [rows]="tableRows"
+          filterPlaceholder="Filtra componenti…"
+        />
+      </div>
+    </section>
+
+    <section id="feedback" class="scroll-mt-5">
+      <ph-section-heading
+        eyebrow="Componenti"
+        title="Feedback"
+        description="Stati leggibili anche senza affidarsi soltanto al colore."
+      />
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="rounded-card border border-positive/25 bg-positive/8 p-5">
+          <strong class="text-base text-positive">Operazione completata</strong>
+          <p class="mt-2 text-sm leading-6 text-ink-muted">Il backup è pronto per il download.</p>
+        </div>
+        <div class="rounded-card border border-caution/25 bg-caution/8 p-5">
+          <strong class="text-base text-caution">Attenzione richiesta</strong>
+          <p class="mt-2 text-sm leading-6 text-ink-muted">
+            Controlla le quote prima di continuare.
+          </p>
+        </div>
+        <div class="rounded-card border border-negative/25 bg-negative/8 p-5">
+          <strong class="text-base text-negative">Azione distruttiva</strong>
+          <p class="mt-2 text-sm leading-6 text-ink-muted">
+            I dati eliminati non saranno recuperabili.
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div class="space-y-3">
+          @if (bannerVisible()) {
+            <ph-notice-banner
+              tone="success"
+              title="Consegna approvata"
+              message="La notifica appare come banner e rimane disponibile nel centro notifiche."
+              actionLabel="Apri consegna"
+              (closed)="bannerVisible.set(false)"
+            />
+          } @else {
+            <ph-button tone="outline" (click)="bannerVisible.set(true)">Mostra banner</ph-button>
+          }
+          <ph-notice-banner
+            tone="warning"
+            title="Quota quasi esaurita"
+            message="Hai utilizzato oltre l’85% del traffico disponibile."
+            [dismissible]="false"
+          />
+        </div>
+        <div class="space-y-3 rounded-card border border-stroke bg-panel p-4">
+          <span class="text-xs font-black tracking-[0.14em] text-brand uppercase">Skeleton</span>
+          <div class="flex items-center gap-3">
+            <ph-skeleton variant="avatar" />
+            <div class="grid flex-1 gap-2"><ph-skeleton /><ph-skeleton /></div>
+          </div>
+          <ph-skeleton variant="card" />
+        </div>
+      </div>
+      <div class="mt-4"><ph-skeleton variant="table" [rows]="3" /></div>
+    </section>
+  </main>
+</div>

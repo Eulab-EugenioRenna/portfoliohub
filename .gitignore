@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+.angular/
+.nx/
+.cache/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+tmp/
+temp/
+apps/aruba-gateway/config.php
+artifacts/

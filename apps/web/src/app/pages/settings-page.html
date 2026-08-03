@@ -1,0 +1,864 @@
+<div class="mx-auto w-full max-w-[1440px] animate-rise pb-20">
+  <header class="mb-7 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+    <div>
+      <span class="text-xs font-black tracking-[0.16em] text-brand uppercase"
+        >CONTROLLO PERSONALE</span
+      >
+      <h1 class="mt-2 text-4xl font-extrabold tracking-[-0.05em] text-ink md:text-5xl">
+        Impostazioni
+      </h1>
+      <p class="mt-2 max-w-2xl text-base leading-7 text-ink-muted">
+        Account, workspace, notifiche, piano e dati in un unico spazio.
+      </p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="mb-5">
+      <ph-notice-banner
+        tone="danger"
+        title="Operazione non riuscita"
+        [message]="error()"
+        (closed)="error.set('')"
+      />
+    </div>
+  }
+
+  <div class="grid gap-6 xl:grid-cols-[270px_minmax(0,1fr)]">
+    <aside class="self-start xl:sticky xl:top-5">
+      <nav
+        class="grid gap-1 rounded-card border border-stroke bg-panel p-2"
+        aria-label="Sezioni impostazioni"
+      >
+        @for (section of sections; track section.id) {
+          <button
+            type="button"
+            [class]="
+              activeSection() === section.id
+                ? 'grid min-h-14 grid-cols-[36px_1fr] items-center gap-3 rounded-ui border-0 bg-brand/12 px-3 text-left text-ink transition'
+                : 'grid min-h-14 grid-cols-[36px_1fr] items-center gap-3 rounded-ui border-0 bg-transparent px-3 text-left text-ink-muted transition hover:bg-panel-raised hover:text-ink'
+            "
+            (click)="selectSection(section.id)"
+          >
+            <span
+              class="grid size-9 place-items-center rounded-lg border border-stroke text-[0.65rem] font-black text-brand"
+              >{{ section.icon }}</span
+            >
+            <span class="min-w-0"
+              ><strong class="block text-sm">{{ section.label }}</strong
+              ><small class="mt-0.5 block truncate text-xs font-normal text-ink-muted">{{
+                section.description
+              }}</small></span
+            >
+          </button>
+        }
+      </nav>
+    </aside>
+
+    <main class="settings-content-top min-w-0">
+      @if (loading()) {
+        <div class="grid gap-4"><ph-skeleton variant="card" /><ph-skeleton variant="card" /></div>
+      } @else {
+        @switch (activeSection()) {
+          @case ('profile') {
+            <ph-section-heading
+              eyebrow="Account"
+              title="Profilo personale"
+              description="Le informazioni con cui vieni riconosciuto nella piattaforma e nelle attività del team."
+            />
+            <ph-card>
+              <div class="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
+                <div class="grid gap-5">
+                  <ph-field
+                    label="Nome visualizzato"
+                    hint="Compare nel menu account, nei commenti e negli audit."
+                  >
+                    <input
+                      type="text"
+                      placeholder="Mario Rossi"
+                      [value]="displayName()"
+                      (input)="displayName.set($any($event.target).value)"
+                    />
+                  </ph-field>
+                  <ph-field
+                    label="Email account"
+                    hint="Per cambiare email è necessaria una nuova verifica."
+                  >
+                    <input
+                      type="email"
+                      placeholder="nome@studio.it"
+                      [value]="auth.principal()?.email"
+                      disabled
+                    />
+                  </ph-field>
+                  <div>
+                    <ph-button [loading]="saving()" (click)="saveProfile()"
+                      >Salva profilo</ph-button
+                    >
+                  </div>
+                </div>
+                <aside class="rounded-card border border-stroke bg-panel-raised p-5">
+                  <span
+                    class="grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-brand-deep to-brand text-xl font-black text-white"
+                    >{{ displayName().slice(0, 2).toUpperCase() || 'PH' }}</span
+                  >
+                  <strong class="mt-5 block text-lg">{{
+                    displayName() || 'Account PortfolioHub'
+                  }}</strong>
+                  <span class="mt-1 block text-sm text-ink-muted">{{
+                    auth.principal()?.email
+                  }}</span>
+                  <dl class="mt-5 grid gap-3 border-t border-stroke pt-4 text-sm">
+                    <div class="flex justify-between gap-3">
+                      <dt class="text-ink-muted">Ruolo</dt>
+                      <dd class="m-0 font-bold capitalize">
+                        {{ workspaces.current()?.membership?.role }}
+                      </dd>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                      <dt class="text-ink-muted">ID account</dt>
+                      <dd class="m-0 max-w-36 truncate font-mono text-xs">
+                        {{ auth.principal()?.userId }}
+                      </dd>
+                    </div>
+                  </dl>
+                </aside>
+              </div>
+            </ph-card>
+          }
+          @case ('workspace') {
+            <ph-section-heading
+              eyebrow="Spazio condiviso"
+              title="Workspace"
+              description="Identità e informazioni dello spazio usato dal team e dai clienti."
+            />
+            <div class="grid gap-4">
+              <ph-card>
+                <div class="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+                  <ph-field
+                    label="Nome workspace"
+                    hint="Visibile nella shell, negli inviti e nelle consegne."
+                    ><input
+                      type="text"
+                      placeholder="Studio creativo"
+                      [value]="workspaceName()"
+                      (input)="workspaceName.set($any($event.target).value)"
+                  /></ph-field>
+                  <ph-button [loading]="saving()" (click)="saveWorkspace()"
+                    >Aggiorna nome</ph-button
+                  >
+                </div>
+              </ph-card>
+              <ph-card>
+                <ph-section-heading
+                  title="Informazioni workspace"
+                  description="Dati tecnici e ownership dello spazio corrente."
+                />
+                <dl
+                  class="grid gap-px overflow-hidden rounded-ui border border-stroke bg-stroke sm:grid-cols-2"
+                >
+                  <div class="bg-panel-raised p-4">
+                    <dt class="text-xs font-black tracking-[0.12em] text-ink-muted uppercase">
+                      Tipo
+                    </dt>
+                    <dd class="mt-2 text-base font-bold capitalize">
+                      {{ workspaces.current()?.workspace?.type }}
+                    </dd>
+                  </div>
+                  <div class="bg-panel-raised p-4">
+                    <dt class="text-xs font-black tracking-[0.12em] text-ink-muted uppercase">
+                      Piano
+                    </dt>
+                    <dd class="mt-2 text-base font-bold capitalize">
+                      {{ workspaces.current()?.workspace?.plan }}
+                    </dd>
+                  </div>
+                  <div class="bg-panel-raised p-4">
+                    <dt class="text-xs font-black tracking-[0.12em] text-ink-muted uppercase">
+                      Slug
+                    </dt>
+                    <dd class="mt-2 font-mono text-sm">
+                      {{ workspaces.current()?.workspace?.slug }}
+                    </dd>
+                  </div>
+                  <div class="bg-panel-raised p-4">
+                    <dt class="text-xs font-black tracking-[0.12em] text-ink-muted uppercase">
+                      Owner unico
+                    </dt>
+                    <dd class="mt-2 text-base font-bold">
+                      {{
+                        workspaces.current()?.membership?.role === 'owner'
+                          ? 'Sei tu'
+                          : 'Gestito dal proprietario'
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+              </ph-card>
+            </div>
+          }
+          @case ('security') {
+            <ph-section-heading
+              eyebrow="Sicurezza"
+              title="Password e sessioni"
+              description="La modifica revoca automaticamente tutte le altre sessioni attive."
+            />
+            <ph-card>
+              <div class="mx-auto grid w-full max-w-3xl gap-5">
+                <ph-field label="Password attuale"
+                  ><ph-password-input
+                    [ngModel]="currentPassword()"
+                    (ngModelChange)="currentPassword.set($event)"
+                /></ph-field>
+                <div class="grid gap-5">
+                  <ph-field
+                    label="Nuova password"
+                    hint="Almeno 12 caratteri."
+                    [error]="passwordError()"
+                    ><ph-password-input
+                      [invalid]="!!passwordError()"
+                      [ngModel]="newPassword()"
+                      (ngModelChange)="newPassword.set($event)"
+                  /></ph-field>
+                  <ph-field label="Conferma password" [error]="passwordError()"
+                    ><ph-password-input
+                      [invalid]="!!passwordError()"
+                      [ngModel]="confirmPassword()"
+                      (ngModelChange)="confirmPassword.set($event)"
+                  /></ph-field>
+                </div>
+                <div class="w-full">
+                  <ph-button [fullWidth]="true" [loading]="saving()" (click)="changePassword()"
+                    >Aggiorna password</ph-button
+                  >
+                </div>
+              </div>
+            </ph-card>
+            <ph-card>
+              <ph-section-heading
+                title="Dispositivi collegati"
+                description="Free e Pro consentono un dispositivo; Unlimited ne consente due contemporaneamente."
+              />
+              <div class="mt-5 grid gap-3">
+                @for (session of sessions(); track session.id) {
+                  <div
+                    class="flex flex-col gap-4 rounded-ui border border-stroke bg-panel-raised p-4 sm:flex-row sm:items-center"
+                  >
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <strong class="truncate text-sm text-ink">
+                          {{ session.userAgent || 'Dispositivo non identificato' }}
+                        </strong>
+                        @if (session.id === auth.principal()?.sessionId) {
+                          <ph-badge tone="success">Sessione corrente</ph-badge>
+                        }
+                      </div>
+                      <p class="mt-1 text-xs text-ink-muted">
+                        IP {{ session.ipAddress || 'non disponibile' }} · Ultima attività
+                        {{ session.lastSeenAt | date: 'dd/MM/yyyy HH:mm' }}
+                      </p>
+                    </div>
+                    @if (session.id !== auth.principal()?.sessionId) {
+                      <ph-button
+                        tone="danger"
+                        [loading]="saving()"
+                        (click)="revokeSession(session.id)"
+                        >Revoca</ph-button
+                      >
+                    }
+                  </div>
+                } @empty {
+                  <p class="m-0 text-sm text-ink-muted">Nessuna sessione attiva.</p>
+                }
+              </div>
+              <div class="mt-4 border-t border-stroke pt-4">
+                <ph-button
+                  tone="outline"
+                  [disabled]="sessions().length <= 1"
+                  [loading]="saving()"
+                  (click)="revokeOtherSessions()"
+                  >Revoca tutte le altre sessioni</ph-button
+                >
+              </div>
+            </ph-card>
+          }
+          @case ('notifications') {
+            <ph-section-heading
+              eyebrow="Preferenze personali"
+              title="Notifiche"
+              description="Scegli cosa appare come banner, cosa rimane nel centro e quali email ricevere."
+            />
+            @if (preferences()) {
+              <div class="grid gap-4">
+                <ph-card>
+                  <h3 class="m-0 text-lg font-extrabold">Esperienza in-app</h3>
+                  <p class="mt-1 text-sm leading-6 text-ink-muted">
+                    Le notifiche restano sempre consultabili nel centro; il banner può essere
+                    disattivato.
+                  </p>
+                  <div class="mt-5 divide-y divide-stroke">
+                    @for (
+                      item of [
+                        {
+                          key: 'inAppBanner',
+                          title: 'Banner immediati',
+                          body: 'Mostra le nuove notifiche sopra la shell.',
+                        },
+                        {
+                          key: 'ticketUpdates',
+                          title: 'Ticket e supporto',
+                          body: 'Risposte e cambi di stato delle conversazioni.',
+                        },
+                        {
+                          key: 'deliveryActivity',
+                          title: 'Consegne',
+                          body: 'Download, approvazioni e commenti dei clienti.',
+                        },
+                        {
+                          key: 'workspaceActivity',
+                          title: 'Workspace',
+                          body: 'Inviti, ruoli, quote e attività operative.',
+                        },
+                      ];
+                      track item.key
+                    ) {
+                      <button
+                        class="flex w-full items-center justify-between gap-5 border-0 bg-transparent py-4 text-left"
+                        type="button"
+                        (click)="togglePreference($any(item.key))"
+                      >
+                        <span
+                          ><strong class="block text-sm text-ink">{{ item.title }}</strong
+                          ><small class="mt-1 block text-xs leading-5 text-ink-muted">{{
+                            item.body
+                          }}</small></span
+                        >
+                        <span
+                          class="relative h-7 w-12 shrink-0 rounded-full transition"
+                          [class.bg-brand]="preference($any(item.key))"
+                          [class.bg-panel-strong]="!preference($any(item.key))"
+                          ><i
+                            class="absolute top-1 size-5 rounded-full bg-white shadow transition-all"
+                            [class.left-6]="preference($any(item.key))"
+                            [class.left-1]="!preference($any(item.key))"
+                          ></i
+                        ></span>
+                      </button>
+                    }
+                  </div>
+                </ph-card>
+                <ph-card>
+                  <h3 class="m-0 text-lg font-extrabold">Email</h3>
+                  <div class="mt-4 divide-y divide-stroke">
+                    @for (
+                      item of [
+                        {
+                          key: 'productEmail',
+                          title: 'Aggiornamenti prodotto',
+                          body: 'Novità utili e cambiamenti della piattaforma.',
+                        },
+                        {
+                          key: 'massEmail',
+                          title: 'Comunicazioni generali',
+                          body: 'Messaggi informativi inviati dal workspace.',
+                        },
+                      ];
+                      track item.key
+                    ) {
+                      <button
+                        class="flex w-full items-center justify-between gap-5 border-0 bg-transparent py-4 text-left"
+                        type="button"
+                        (click)="togglePreference($any(item.key))"
+                      >
+                        <span
+                          ><strong class="block text-sm text-ink">{{ item.title }}</strong
+                          ><small class="mt-1 block text-xs text-ink-muted">{{
+                            item.body
+                          }}</small></span
+                        ><span
+                          class="relative h-7 w-12 shrink-0 rounded-full transition"
+                          [class.bg-brand]="preference($any(item.key))"
+                          [class.bg-panel-strong]="!preference($any(item.key))"
+                          ><i
+                            class="absolute top-1 size-5 rounded-full bg-white shadow transition-all"
+                            [class.left-6]="preference($any(item.key))"
+                            [class.left-1]="!preference($any(item.key))"
+                          ></i
+                        ></span>
+                      </button>
+                    }
+                  </div>
+                  <div class="mt-5">
+                    <ph-button [loading]="saving()" (click)="savePreferences()"
+                      >Salva preferenze</ph-button
+                    >
+                  </div>
+                </ph-card>
+              </div>
+            }
+          }
+          @case ('plans') {
+            <ph-section-heading
+              eyebrow="Piani e fatturazione"
+              title="Più spazio quando serve"
+              description="Confronta chiaramente quote e costi, poi completa il pagamento senza uscire dalla shell."
+            />
+            @if (catalog(); as plans) {
+              @if (currentPlan(); as plan) {
+                <article
+                  class="mb-5 overflow-hidden rounded-shell border border-brand/35 bg-[radial-gradient(circle_at_0%_0%,color-mix(in_srgb,var(--blue)_18%,transparent),transparent_42%)]"
+                >
+                  <header
+                    class="flex flex-col justify-between gap-5 border-b border-stroke p-6 md:flex-row md:items-start"
+                  >
+                    <div>
+                      <span class="text-xs font-black tracking-[.15em] text-brand uppercase"
+                        >Il tuo piano attuale</span
+                      >
+                      <div class="mt-2 flex flex-wrap items-center gap-3">
+                        <h3 class="text-3xl font-extrabold tracking-[-.04em]">
+                          {{ planName(plan.id) }}
+                        </h3>
+                        <ph-badge>{{ billing()?.workspaceStatus?.toUpperCase() }}</ph-badge>
+                      </div>
+                      <p class="mt-2 text-sm leading-6 text-ink-muted">
+                        @if (billing()?.subscription?.billingInterval) {
+                          €{{ currentPlanPrice(plan) }} /
+                          {{
+                            billing()?.subscription?.billingInterval === 'annual' ? 'anno' : 'mese'
+                          }}
+                          · Stato abbonamento {{ billing()?.subscription?.status }}
+                        } @else {
+                          Nessun rinnovo automatico associato.
+                          @if (workspaces.current()?.workspace?.trialEndsAt) {
+                            Trial disponibile fino al
+                            {{
+                              workspaces.current()?.workspace?.trialEndsAt
+                                | date: 'd MMMM y, HH:mm'
+                            }}.
+                          }
+                        }
+                      </p>
+                    </div>
+                    @if (billing()?.subscription && plans.provider === 'stripe') {
+                      <ph-button tone="outline" (click)="openCustomerPortal()"
+                        >Gestisci abbonamento</ph-button
+                      >
+                    }
+                  </header>
+                  <dl class="grid gap-px bg-stroke sm:grid-cols-2 xl:grid-cols-4">
+                    <div class="bg-panel/95 p-5">
+                      <dt class="text-[10px] font-black tracking-[.12em] text-ink-muted uppercase">
+                        Storage utilizzato
+                      </dt>
+                      <dd class="mt-2 text-xl font-bold">
+                        {{ billing()?.commercialUsage?.storageGb }} GB
+                        <small class="text-xs font-normal text-ink-muted"
+                          >/ {{ plan.storageGb === null ? '∞' : plan.storageGb + ' GB' }}</small
+                        >
+                      </dd>
+                    </div>
+                    <div class="bg-panel/95 p-5">
+                      <dt class="text-[10px] font-black tracking-[.12em] text-ink-muted uppercase">
+                        Traffico del periodo
+                      </dt>
+                      <dd class="mt-2 text-xl font-bold">
+                        {{ billing()?.commercialUsage?.trafficGb }} GB
+                        <small class="text-xs font-normal text-ink-muted"
+                          >/ {{ plan.trafficGb === null ? '∞' : plan.trafficGb + ' GB' }}</small
+                        >
+                      </dd>
+                    </div>
+                    <div class="bg-panel/95 p-5">
+                      <dt class="text-[10px] font-black tracking-[.12em] text-ink-muted uppercase">
+                        Rinnovo
+                      </dt>
+                      <dd class="mt-2 text-base font-bold">
+                        @if (billing()?.subscription?.currentPeriodEnd) {
+                          {{ billing()?.subscription?.currentPeriodEnd | date: 'd MMM y' }}
+                          @if (billing()?.subscription?.cancelAtPeriodEnd) {
+                            <small class="mt-1 block text-xs font-normal text-caution"
+                              >Cancellazione programmata</small
+                            >
+                          }
+                        } @else {
+                          Non previsto
+                        }
+                      </dd>
+                    </div>
+                    <div class="bg-panel/95 p-5">
+                      <dt class="text-[10px] font-black tracking-[.12em] text-ink-muted uppercase">
+                        Workspace
+                      </dt>
+                      <dd class="mt-2 text-xl font-bold">
+                        {{ workspaces.capabilities().owned }}
+                        <small class="text-xs font-normal text-ink-muted"
+                          >/ {{ plan.workspaces ?? '∞' }}</small
+                        >
+                      </dd>
+                    </div>
+                  </dl>
+                  <footer
+                    class="grid gap-3 border-t border-stroke bg-panel-raised/55 p-5 text-sm text-ink-muted sm:grid-cols-2 xl:grid-cols-4"
+                  >
+                    <span
+                      ><b class="text-ink">{{ plan.projects ?? 'Illimitati' }}</b> progetti</span
+                    >
+                    <span
+                      ><b class="text-ink">{{ plan.members ?? 'Illimitati' }}</b> membri</span
+                    >
+                    <span
+                      ><b class="text-ink">{{ plan.maxFileGb }} GB</b> per file</span
+                    >
+                    <span
+                      ><b class="text-ink">{{ plan.workspaces ?? 'Illimitati' }}</b> workspace</span
+                    >
+                  </footer>
+                </article>
+              }
+              <div class="mb-5 flex justify-end">
+                <div class="flex rounded-ui border border-stroke bg-panel p-1">
+                  <button
+                    class="min-h-10 rounded-lg border-0 px-4 text-sm font-bold transition"
+                    type="button"
+                    [class.bg-brand]="!billingAnnual()"
+                    [class.text-white]="!billingAnnual()"
+                    [class.bg-transparent]="billingAnnual()"
+                    [class.text-ink-muted]="billingAnnual()"
+                    (click)="billingAnnual.set(false)"
+                  >
+                    Mensile
+                  </button>
+                  <button
+                    class="min-h-10 rounded-lg border-0 px-4 text-sm font-bold transition"
+                    type="button"
+                    [class.bg-brand]="billingAnnual()"
+                    [class.text-white]="billingAnnual()"
+                    [class.bg-transparent]="!billingAnnual()"
+                    [class.text-ink-muted]="!billingAnnual()"
+                    (click)="billingAnnual.set(true)"
+                  >
+                    Annuale
+                    <span class="ml-1 text-xs text-positive"
+                      >−{{ plans.annualDiscountPercent }}%</span
+                    >
+                  </button>
+                </div>
+              </div>
+              <div class="grid gap-4 lg:grid-cols-3">
+                @for (plan of plans.plans; track plan.id) {
+                  <article
+                    class="flex min-h-[520px] flex-col rounded-shell border bg-panel p-6 transition duration-200 hover:-translate-y-1"
+                    [class.border-brand]="plan.id === 'pro'"
+                    [class.border-stroke]="plan.id !== 'pro'"
+                    [class.shadow-float]="plan.id === 'pro'"
+                  >
+                    <header class="flex min-h-16 justify-between gap-3">
+                      <div>
+                        <span class="text-xs font-black tracking-[0.14em] text-brand uppercase">{{
+                          plan.id === 'pro'
+                            ? 'Più scelto'
+                            : plan.id === 'unlimited'
+                              ? 'Fair use'
+                              : 'Per iniziare'
+                        }}</span>
+                        <h3 class="mt-2 text-2xl font-extrabold tracking-[-0.035em]">
+                          {{ planName(plan.id) }}
+                        </h3>
+                      </div>
+                      @if (billing()?.plan === plan.id) {
+                        <ph-badge>ATTUALE</ph-badge>
+                      }
+                    </header>
+                    <div class="mt-7 flex items-baseline gap-2">
+                      <strong
+                        class="font-display text-5xl font-normal tracking-[-0.06em] md:text-6xl"
+                        >€{{ planPrice(plan) }}</strong
+                      ><span class="text-sm text-ink-muted">{{
+                        billingAnnual() ? '/anno' : '/mese'
+                      }}</span>
+                    </div>
+                    <p class="mt-2 min-h-11 text-sm leading-6 text-ink-muted">
+                      @if (billingAnnual() && plan.annual) {
+                        Equivale a €{{ annualMonthlyEquivalent(plan) }}/mese. Risparmi
+                        {{ plans.annualDiscountPercent }}%.
+                      } @else if (plan.id === 'free') {
+                        Nessuna carta richiesta.
+                      } @else {
+                        Fatturazione mensile. Cambio gestito alla scadenza.
+                      }
+                    </p>
+                    <ul
+                      class="mt-6 grid gap-3 border-t border-stroke pt-6 text-sm leading-6 text-ink-muted"
+                    >
+                      <li>
+                        ✓ <b class="text-ink">{{ plan.projects ?? 'Illimitati' }}</b> progetti
+                      </li>
+                      <li>
+                        ✓
+                        <b class="text-ink">{{
+                          plan.storageGb === null ? 'Illimitato' : plan.storageGb + ' GB'
+                        }}</b>
+                        storage
+                      </li>
+                      <li>
+                        ✓
+                        <b class="text-ink">{{
+                          plan.trafficGb === null ? 'Illimitato' : plan.trafficGb + ' GB'
+                        }}</b>
+                        traffico
+                      </li>
+                      <li>
+                        ✓ <b class="text-ink">{{ plan.maxFileGb }} GB</b> per file
+                      </li>
+                      <li>
+                        ✓ <b class="text-ink">{{ plan.members ?? 'Illimitati' }}</b> membri
+                      </li>
+                      <li>
+                        ✓ <b class="text-ink">{{ plan.workspaces ?? 'Illimitati' }}</b> workspace
+                      </li>
+                    </ul>
+                    <div class="mt-auto pt-7">
+                      @if (plan.id === 'free') {
+                        <ph-button
+                          tone="outline"
+                          [fullWidth]="true"
+                          [disabled]="billing()?.plan === 'free'"
+                          (click)="openCustomerPortal()"
+                          >{{
+                            billing()?.plan === 'free' ? 'Piano attuale' : 'Passa a Free a scadenza'
+                          }}</ph-button
+                        >
+                      } @else {
+                        <ph-button
+                          [fullWidth]="true"
+                          [disabled]="billing()?.plan === plan.id"
+                          [loading]="saving() && checkoutPlan() === plan.id"
+                          (click)="choosePlan(plan.id)"
+                          >{{
+                            billing()?.plan === plan.id
+                              ? 'Piano attuale'
+                              : billing()?.subscription &&
+                                  ['active', 'trialing'].includes(billing()!.subscription!.status)
+                                ? 'Gestisci o cambia piano'
+                                : 'Scegli ' + planName(plan.id) + ' →'
+                          }}</ph-button
+                        >
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+              <div class="mt-4">
+                <ph-notice-banner
+                  tone="info"
+                  title="Cambio piano trasparente"
+                  message="Upgrade immediato dopo conferma Stripe. Downgrade e cancellazione alla fine del periodo pagato."
+                  [dismissible]="false"
+                />
+              </div>
+            }
+          }
+          @case ('data') {
+            <ph-section-heading
+              eyebrow="Portabilità"
+              title="Dati e backup"
+              description="Prepara una copia completa dei dati oppure svuota lo spazio senza scaricare."
+            />
+            <div class="grid gap-5">
+              <div class="grid gap-4 lg:grid-cols-2">
+                <ph-card
+                  ><ph-badge>BACKUP TOTALE</ph-badge>
+                  <h3 class="mt-5 text-xl font-extrabold">Esporta tutti i dati</h3>
+                  <p class="mt-2 text-sm leading-6 text-ink-muted">
+                    Avvia una richiesta di portabilità con dati account, workspace e metadati.
+                    Riceverai una notifica quando sarà pronta.
+                  </p>
+                  <div class="mt-6">
+                    <ph-button [loading]="saving()" (click)="requestBackup()"
+                      >Prepara backup</ph-button
+                    >
+                  </div></ph-card
+                >
+                <article class="rounded-card border border-negative/30 bg-negative/6 p-6">
+                  <span class="text-xs font-black tracking-[0.14em] text-negative uppercase"
+                    >Zona distruttiva</span
+                  >
+                  <h3 class="mt-5 text-xl font-extrabold">Svuota workspace</h3>
+                  <p class="mt-2 text-sm leading-6 text-ink-muted">
+                    Elimina progetti e file senza creare un download. L’azione non può essere
+                    annullata.
+                  </p>
+                  <div class="mt-6">
+                    <ph-button tone="danger" [loading]="saving()" (click)="wipeWorkspace()"
+                      >Svuota definitivamente</ph-button
+                    >
+                  </div>
+                </article>
+              </div>
+              <ph-card>
+                <h3 class="m-0 text-lg font-extrabold">Richieste dati</h3>
+                <div class="mt-4 divide-y divide-stroke">
+                  @for (request of privacyRequests(); track request.id) {
+                    <div class="flex items-center justify-between gap-4 py-4">
+                      <span
+                        ><strong class="block text-sm capitalize">{{ request.kind }}</strong
+                        ><small class="mt-1 block text-xs text-ink-muted"
+                          >Richiesta {{ request.requestedAt | date: 'd MMM y, HH:mm' }}</small
+                        ></span
+                      ><span class="flex items-center gap-2"
+                        ><ph-badge>{{ request.status.toUpperCase() }}</ph-badge>
+                        @if (request.status === 'completed' && request.resultKey) {
+                          <ph-button tone="outline" (click)="downloadBackup(request)"
+                            >Scarica JSON</ph-button
+                          >
+                        }
+                      </span>
+                    </div>
+                  } @empty {
+                    <p class="py-5 text-sm text-ink-muted">Nessuna richiesta dati.</p>
+                  }
+                </div>
+              </ph-card>
+            </div>
+          }
+          @case ('tutorial') {
+            <ph-section-heading
+              eyebrow="Guida"
+              title="Tutorial e assistenza"
+              description="Rivedi il percorso iniziale senza modificare i dati o la configurazione."
+            />
+            <ph-card
+              ><div class="grid gap-6 md:grid-cols-[1fr_240px] md:items-center">
+                <div>
+                  <ph-badge>3 PASSAGGI</ph-badge>
+                  <h3 class="mt-5 text-2xl font-extrabold">Riparti dalle basi</h3>
+                  <p class="mt-2 max-w-2xl text-sm leading-6 text-ink-muted">
+                    Il tutorial mostra workspace, caricamento e creazione degli accessi. Puoi
+                    saltarlo in qualsiasi momento.
+                  </p>
+                  <div class="mt-6">
+                    <ph-button (click)="restartTutorial()">Avvia tutorial →</ph-button>
+                  </div>
+                </div>
+                <div class="rounded-card border border-stroke bg-panel-raised p-5">
+                  <span
+                    class="grid size-12 place-items-center rounded-xl bg-brand/12 text-xl font-black text-brand"
+                    >?</span
+                  >
+                  <ol class="mt-5 grid gap-3 text-sm text-ink-muted">
+                    <li>01 · Orientamento</li>
+                    <li>02 · Progetti e file</li>
+                    <li>03 · Consegne e accessi</li>
+                  </ol>
+                </div>
+              </div></ph-card
+            >
+          }
+          @case ('account') {
+            <ph-section-heading
+              eyebrow="Lifecycle"
+              title="Cancellazione account"
+              description="Solo l’Owner può eliminare i propri workspace. La cancellazione definitiva avviene dopo 30 giorni."
+            />
+            @if (deletion(); as request) {
+              <div class="grid gap-4">
+                <ph-notice-banner
+                  tone="warning"
+                  title="Cancellazione programmata"
+                  [message]="
+                    'Eliminazione definitiva prevista il ' +
+                    (request.scheduledFor | date: 'd MMMM y, HH:mm') +
+                    '. Puoi ancora annullarla.'
+                  "
+                  [dismissible]="false"
+                />
+                <ph-card
+                  ><div class="grid max-w-xl gap-5">
+                    <ph-field label="Password" hint="Necessaria per annullare la richiesta."
+                      ><ph-password-input
+                        [ngModel]="deletionPassword()"
+                        (ngModelChange)="deletionPassword.set($event)"
+                    /></ph-field>
+                    <div>
+                      <ph-button tone="outline" [loading]="saving()" (click)="cancelDeletion()"
+                        >Annulla cancellazione</ph-button
+                      >
+                    </div>
+                  </div></ph-card
+                >
+              </div>
+            } @else {
+              <article class="rounded-card border border-negative/30 bg-negative/6 p-6">
+                <span class="text-xs font-black tracking-[0.14em] text-negative uppercase"
+                  >Azione irreversibile dopo 30 giorni</span
+                >
+                <h3 class="mt-5 text-2xl font-extrabold">Elimina account e workspace</h3>
+                <p class="mt-2 max-w-3xl text-sm leading-6 text-ink-muted">
+                  La richiesta programma l’eliminazione di account, workspace posseduti, file e
+                  metadati. Durante i 30 giorni puoi annullarla da questa pagina.
+                </p>
+                <div class="mt-6 max-w-xl">
+                  <ph-field label="Password di conferma"
+                    ><ph-password-input
+                      [ngModel]="deletionPassword()"
+                      (ngModelChange)="deletionPassword.set($event)"
+                  /></ph-field>
+                </div>
+                <div class="mt-6">
+                  <ph-button tone="danger" [loading]="saving()" (click)="scheduleDeletion()"
+                    >Programma cancellazione</ph-button
+                  >
+                </div>
+              </article>
+            }
+          }
+        }
+      }
+    </main>
+  </div>
+</div>
+
+@if (checkoutOpen()) {
+  <button
+    class="fixed inset-0 z-[8000] border-0 bg-slate-950/80 backdrop-blur-md"
+    type="button"
+    aria-label="Chiudi pagamento"
+    (click)="closeCheckout()"
+    phAppendToBody
+  ></button>
+  <section
+    class="fixed top-1/2 left-1/2 z-[8001] flex max-h-[calc(100dvh-2rem)] w-[min(940px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 animate-rise flex-col overflow-hidden rounded-shell border border-stroke bg-panel shadow-float"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-checkout-title"
+    phAppendToBody
+  >
+    <header class="flex items-start justify-between gap-5 border-b border-stroke p-5">
+      <div>
+        <span class="text-xs font-black tracking-[0.15em] text-brand uppercase"
+          >CHECKOUT SICURO</span
+        >
+        <h2 id="settings-checkout-title" class="mt-2 text-xl font-extrabold">
+          {{ planName(checkoutPlan() || 'pro') }} · {{ billingAnnual() ? 'annuale' : 'mensile' }}
+        </h2>
+        <p class="mt-1 text-sm text-ink-muted">Completa il pagamento senza uscire dalla shell.</p>
+      </div>
+      <button
+        class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-lg text-ink-muted"
+        type="button"
+        aria-label="Chiudi"
+        (click)="closeCheckout()"
+      >
+        ×
+      </button>
+    </header>
+    <div id="settings-stripe-checkout" class="min-h-[520px] overflow-auto bg-white p-3"></div>
+    <footer
+      class="flex flex-col justify-between gap-2 border-t border-stroke px-5 py-3 text-xs text-ink-muted sm:flex-row"
+    >
+      <span>Pagamento elaborato da Stripe</span
+      ><span>Piano aggiornato soltanto dopo webhook verificato</span>
+    </footer>
+  </section>
+}

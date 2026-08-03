@@ -1,0 +1,266 @@
+<header class="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+  <div>
+    <a class="text-sm font-bold text-brand no-underline" routerLink="/progetti">← Progetti</a>
+    <h1 class="mt-3 text-4xl font-extrabold tracking-[-.05em]">
+      {{ trashMode() ? 'Cestino' : 'File e cartelle' }}
+    </h1>
+    @if (trashMode()) {
+      <p class="mt-2 text-sm text-caution">
+        Gli elementi vengono eliminati automaticamente dopo 30 giorni.
+      </p>
+    } @else {
+      <nav class="mt-3 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+        @for (parent of parents(); track $index) {
+          <button
+            class="border-0 bg-transparent p-0 font-bold text-ink-muted hover:text-brand"
+            type="button"
+            (click)="backTo($index)"
+          >
+            {{ parent.name }}</button
+          ><span>/</span>
+        }
+      </nav>
+    }
+  </div>
+  <div class="flex flex-wrap gap-2">
+    @if (!trashMode()) {
+      <button
+        class="min-h-11 rounded-ui border border-brand/30 bg-brand/8 px-4 text-sm font-bold text-brand"
+        type="button"
+        title="Condividi il progetto o invita un collaboratore"
+        (click)="shareProject()"
+      >
+        ↗ Condividi progetto
+      </button>
+    }
+    <button
+      class="trash-toggle min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+      [class.!border-brand]="trashMode()"
+      type="button"
+      (click)="toggleTrash()"
+    >
+      {{ trashMode() ? '← Torna ai file' : '♲ Cestino' }}
+    </button>
+    @if (trashMode()) {
+      <button
+        class="empty-trash min-h-11 rounded-ui border border-negative/30 bg-negative/8 px-4 text-sm font-bold text-negative disabled:opacity-45"
+        type="button"
+        [disabled]="loading() || nodes().length === 0"
+        (click)="emptyTrash()"
+      >
+        Svuota cestino
+        @if (nodes().length) {
+          <span>{{ nodes().length }}</span>
+        }
+      </button>
+    } @else {
+      <button
+        class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+        type="button"
+        (click)="createFolder()"
+      >
+        ＋ Cartella</button
+      ><label
+        class="upload inline-flex min-h-11 cursor-pointer items-center rounded-ui bg-brand px-4 text-sm font-bold text-white"
+        [class.opacity-50]="uploading()"
+        ><input
+          class="hidden"
+          type="file"
+          placeholder="Seleziona uno o più file"
+          multiple
+          [disabled]="uploading()"
+          (change)="pick($event)"
+        /><span>↑ Carica file</span></label
+      >
+    }
+  </div>
+</header>
+@if (error()) {
+  <div class="mt-5 rounded-card border border-negative/30 bg-negative/8 p-4 text-sm text-negative">
+    {{ error() }}
+  </div>
+}
+@if (uploadQueue().length) {
+  <section
+    class="upload-queue mt-5 overflow-hidden rounded-card border border-brand/30 bg-panel shadow-float"
+    aria-live="polite"
+  >
+    <header class="flex items-center justify-between gap-5 border-b border-stroke p-5">
+      <div>
+        <span class="block text-[10px] font-black tracking-[.16em] text-brand"
+          >CARICAMENTO ED ELABORAZIONE</span
+        >
+        <strong class="mt-1 block text-sm"
+          >{{ completedUploads() }} di {{ uploadQueue().length }} disponibili</strong
+        >
+      </div>
+      <div class="text-right text-xs text-ink-muted">
+        <span class="block">Step {{ activeUploadStep() }} di {{ uploadQueue().length }}</span
+        ><strong class="mt-1 block text-lg text-ink">{{ overallProgress() }}%</strong>
+      </div>
+    </header>
+    <div
+      class="h-1.5 bg-panel-strong"
+      role="progressbar"
+      aria-label="Avanzamento totale"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="overallProgress()"
+    >
+      <i
+        class="block h-full bg-gradient-to-r from-brand to-accent transition-[width] duration-300"
+        [style.width.%]="overallProgress()"
+      ></i>
+    </div>
+    <ol class="m-0 grid list-none divide-y divide-stroke p-0">
+      @for (item of uploadQueue(); track item.id; let step = $index) {
+        <li
+          class="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 p-4"
+          [attr.data-status]="item.status"
+        >
+          <span
+            class="grid size-8 place-items-center rounded-full bg-brand/12 text-xs font-black text-brand"
+            >{{ step + 1 }}</span
+          >
+          <div class="min-w-0">
+            <div>
+              <strong class="block truncate text-sm">{{ item.fileName }}</strong
+              ><small class="mt-1 block text-xs text-ink-muted">{{
+                formatUploadSize(item.size)
+              }}</small>
+            </div>
+            <div class="mt-2 h-1 overflow-hidden rounded-full bg-panel-strong">
+              <i
+                class="block h-full bg-brand transition-[width]"
+                [style.width.%]="item.progress"
+              ></i>
+            </div>
+            @if (item.error) {
+              <small class="mt-2 block text-xs text-negative">{{ item.error }}</small>
+            }
+          </div>
+          <span class="text-right text-xs font-bold text-ink-muted"
+            >{{ uploadStatus(item) }} · {{ item.progress }}%</span
+          >
+        </li>
+      }
+    </ol>
+  </section>
+}
+@if (pending(); as upload) {
+  <section
+    class="mt-5 flex flex-col justify-between gap-4 rounded-card border border-caution/30 bg-caution/8 p-5 sm:flex-row sm:items-center"
+  >
+    <div>
+      <strong class="block text-sm text-caution">Upload da riprendere</strong
+      ><span class="mt-1 block text-sm"
+        >{{ upload.fileName }} · {{ ((upload.offset / upload.size) * 100).toFixed(0) }}%</span
+      ><small class="mt-1 block text-xs text-ink-muted">Scade {{ upload.expiresAt }}</small>
+    </div>
+    <label class="cursor-pointer rounded-ui bg-caution px-4 py-3 text-xs font-bold text-slate-950"
+      >Riseleziona lo stesso file<input
+        class="hidden"
+        type="file"
+        placeholder="Riseleziona il file"
+        (change)="resume($event)"
+    /></label>
+  </section>
+}
+<section
+  class="mt-5 overflow-hidden rounded-card border border-stroke bg-panel"
+  [class.trash-panel]="trashMode()"
+>
+  <header
+    class="hidden min-h-12 grid-cols-[minmax(0,1.5fr)_.5fr_.6fr_auto] items-center gap-4 border-b border-stroke bg-panel-raised px-5 text-[10px] font-black tracking-[.12em] text-ink-muted uppercase md:grid"
+  >
+    <span>Nome</span><span>Tipo</span><span>{{ trashMode() ? 'Eliminato' : 'Aggiornato' }}</span
+    ><span>Azioni</span>
+  </header>
+  @if (loading()) {
+    <div class="p-12 text-center text-sm text-ink-muted">Caricamento…</div>
+  } @else {
+    @for (node of nodes(); track node.id) {
+      <article
+        class="grid gap-3 border-t border-stroke p-4 first:border-t-0 md:grid-cols-[minmax(0,1.5fr)_.5fr_.6fr_auto] md:items-center md:px-5"
+      >
+        <button
+          class="flex min-w-0 items-center gap-3 border-0 bg-transparent p-0 text-left disabled:cursor-default"
+          type="button"
+          [disabled]="trashMode()"
+          (click)="node.kind === 'folder' ? openFolder(node) : download(node)"
+        >
+          <i
+            class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand/12 text-xs font-black not-italic text-brand"
+            >{{ node.kind === 'folder' ? 'CA' : 'FI' }}</i
+          ><strong class="truncate text-sm text-ink">{{ node.name }}</strong></button
+        ><span class="text-xs text-ink-muted">{{ formatSize(node) }}</span
+        ><time class="text-xs text-ink-muted">{{
+          trashMode() ? node.trashedAt : node.updatedAt
+        }}</time>
+        <div class="flex flex-wrap gap-2 md:justify-end">
+          @if (trashMode()) {
+            <button
+              class="rounded-lg border border-positive/30 bg-positive/8 px-3 py-2 text-xs font-bold text-positive"
+              type="button"
+              (click)="restore(node)"
+            >
+              Ripristina
+            </button>
+            <button
+              class="rounded-lg border border-negative/30 bg-negative/8 px-3 py-2 text-xs font-bold text-negative"
+              type="button"
+              (click)="permanentlyDelete(node)"
+            >
+              Elimina subito
+            </button>
+          } @else {
+            <button
+              class="grid size-9 place-items-center rounded-lg border border-brand/30 bg-brand/8 text-base font-bold text-brand"
+              type="button"
+              [attr.aria-label]="'Condividi ' + node.name"
+              [title]="'Condividi ' + node.name"
+              (click)="shareNode(node)"
+            >
+              ↗
+            </button>
+            <button
+              class="rounded-lg border border-stroke bg-panel-raised px-3 py-2 text-xs font-bold text-ink"
+              type="button"
+              (click)="node.kind === 'folder' ? archive(node) : download(node)"
+            >
+              {{ node.kind === 'folder' ? 'ZIP' : 'Scarica' }}</button
+            ><button
+              class="rounded-lg border border-negative/30 bg-negative/8 px-3 py-2 text-xs font-bold text-negative"
+              type="button"
+              (click)="trash(node)"
+            >
+              Cestino
+            </button>
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="grid min-h-64 place-items-center p-8 text-center">
+        <div>
+          <strong class="block">{{
+            trashMode() ? 'Il cestino è vuoto.' : 'Questa cartella è vuota.'
+          }}</strong>
+          @if (!trashMode()) {
+            <span class="mt-2 block text-sm text-ink-muted"
+              >Carica un file o crea una sottocartella.</span
+            >
+          }
+        </div>
+      </div>
+    }
+  }
+</section>
+@if (shareTarget(); as target) {
+  <ph-share-dialog
+    [workspaceId]="workspaces.current()!.workspace.id"
+    [target]="target"
+    [clients]="clients()"
+    [plan]="workspaces.current()!.workspace.plan"
+    (closed)="shareTarget.set(null)"
+  />
+}

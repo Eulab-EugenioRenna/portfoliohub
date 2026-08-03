@@ -1,0 +1,132 @@
+<div
+  class="fixed inset-0 z-[9800] grid place-items-center overflow-y-auto bg-slate-950/72 p-4 backdrop-blur-sm"
+  role="presentation"
+  phAppendToBody
+  (mousedown)="$event.target === $event.currentTarget && closed.emit()"
+>
+  <section
+    class="my-auto w-full max-w-[860px] overflow-hidden rounded-[24px] border border-stroke bg-panel text-ink shadow-float"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="share-title"
+  >
+    <header class="flex items-start justify-between gap-5 border-b border-stroke px-6 py-5">
+      <div class="min-w-0">
+        <span class="text-[10px] font-black tracking-[.16em] text-brand uppercase">Condividi {{ target().kind }}</span>
+        <h2 id="share-title" class="mt-2 truncate text-2xl font-semibold tracking-[-.03em]">{{ target().name }}</h2>
+        <p class="mt-1 text-sm text-ink-muted">Scegli se consegnare al cliente o invitare una persona nel lavoro.</p>
+      </div>
+      <button class="grid size-10 shrink-0 place-items-center rounded-xl border border-stroke bg-panel-raised text-lg text-ink" type="button" aria-label="Chiudi" (click)="closed.emit()">×</button>
+    </header>
+
+    <div class="grid gap-0 lg:grid-cols-[250px_minmax(0,1fr)]">
+      <aside class="border-b border-stroke bg-panel-raised/60 p-4 lg:border-r lg:border-b-0">
+        <button
+          class="w-full rounded-xl border p-4 text-left transition"
+          [class.border-brand]="mode() === 'delivery'"
+          [class.bg-brand/10]="mode() === 'delivery'"
+          [class.border-stroke]="mode() !== 'delivery'"
+          type="button"
+          (click)="mode.set('delivery'); resultUrl.set('')"
+        >
+          <span class="grid size-9 place-items-center rounded-lg bg-brand text-xs font-black text-white">CL</span>
+          <strong class="mt-3 block text-sm">Consegna al cliente</strong>
+          <small class="mt-1 block leading-5 text-ink-muted">Link pubblico con download, commenti e approvazione.</small>
+        </button>
+        <button
+          class="mt-3 w-full rounded-xl border p-4 text-left transition"
+          [class.border-brand]="mode() === 'collaboration'"
+          [class.bg-brand/10]="mode() === 'collaboration'"
+          [class.border-stroke]="mode() !== 'collaboration'"
+          type="button"
+          (click)="mode.set('collaboration'); resultUrl.set('')"
+        >
+          <span class="grid size-9 place-items-center rounded-lg bg-accent/15 text-xs font-black text-accent">CO</span>
+          <strong class="mt-3 block text-sm">Invita collaboratore</strong>
+          <small class="mt-1 block leading-5 text-ink-muted">Accesso autenticato con ruolo e ambito controllato.</small>
+        </button>
+      </aside>
+
+      <div class="p-6">
+        @if (resultUrl()) {
+          <div class="grid min-h-80 place-items-center text-center">
+            <div class="max-w-md">
+              <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-positive/12 text-2xl text-positive">✓</span>
+              <h3 class="mt-5 text-xl font-semibold">Condivisione pronta</h3>
+              <p class="mt-2 text-sm leading-6 text-ink-muted">Il link è stato copiato. Puoi copiarlo di nuovo oppure chiudere il dialogo.</p>
+              <div class="mt-5 flex items-center gap-2 rounded-ui border border-stroke bg-panel-raised p-2 pl-3">
+                <code class="min-w-0 flex-1 truncate text-left text-xs text-ink-muted">{{ resultUrl() }}</code>
+                <button class="rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white" type="button" (click)="copy()">Copia</button>
+              </div>
+            </div>
+          </div>
+        } @else if (mode() === 'delivery') {
+          <div class="grid gap-5 sm:grid-cols-2">
+            <label class="grid gap-2 text-xs font-bold text-ink-muted sm:col-span-2">Titolo consegna
+              <input class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-3 text-sm text-ink" type="text" placeholder="Consegna finale" [ngModel]="title()" (ngModelChange)="title.set($event)" />
+            </label>
+            <label class="grid gap-2 text-xs font-bold text-ink-muted sm:col-span-2">Cliente associato
+              <ph-select ariaLabel="Cliente associato" placeholder="Nessun cliente" [options]="clientOptions()" [filterable]="true" [ngModel]="clientId()" (ngModelChange)="clientId.set($event)" />
+            </label>
+            <section class="sm:col-span-2">
+              <span class="text-xs font-bold text-ink-muted">Permessi del link</span>
+              <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                @for (permission of [
+                  { key: 'download', label: 'Download', body: 'Può scaricare file e cartelle ZIP', active: allowDownload() },
+                  { key: 'comments', label: 'Commenti', body: 'Può lasciare feedback sul lavoro', active: allowComments() },
+                  { key: 'approval', label: 'Approvazione', body: 'Può approvare o chiedere modifiche', active: allowApproval() },
+                  { key: 'oneShot', label: 'One-shot', body: 'Il link è visibile una sola volta', active: oneShot() }
+                ]; track permission.key) {
+                  <button
+                    class="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-stroke bg-panel-raised p-3 text-left"
+                    [class.!border-brand]="permission.active"
+                    [class.!bg-brand/8]="permission.active"
+                    type="button"
+                    (click)="togglePermission($any(permission.key))"
+                  >
+                    <span><strong class="block text-sm">{{ permission.label }}</strong><small class="mt-1 block text-xs text-ink-muted">{{ permission.body }}</small></span>
+                    <i class="grid size-6 place-items-center rounded-full border border-stroke text-xs not-italic" [class.bg-brand]="permission.active" [class.text-white]="permission.active">{{ permission.active ? '✓' : '' }}</i>
+                  </button>
+                }
+              </div>
+              @if (isFreePlan()) { <p class="mt-2 text-xs text-caution">Commenti, approvazione, one-shot e limite download richiedono Pro o Unlimited. Puoi configurare le opzioni e aggiornare il piano prima di creare il link.</p> }
+            </section>
+            <label class="grid gap-2 text-xs font-bold text-ink-muted">Password facoltativa
+              <span class="flex min-h-11 overflow-hidden rounded-ui border border-stroke bg-panel-raised focus-within:border-brand">
+                <input class="min-w-0 flex-1 bg-transparent px-3 text-sm text-ink outline-none" [type]="passwordVisible() ? 'text' : 'password'" placeholder="Almeno 8 caratteri" autocomplete="new-password" [ngModel]="password()" (ngModelChange)="password.set($event)" />
+                <button class="px-3 text-xs font-bold text-brand" type="button" [attr.aria-label]="passwordVisible() ? 'Nascondi password' : 'Mostra password'" (click)="togglePasswordVisibility()">{{ passwordVisible() ? 'Nascondi' : 'Mostra' }}</button>
+              </span>
+            </label>
+            <label class="grid gap-2 text-xs font-bold text-ink-muted">Scadenza
+              <input class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-3 text-sm text-ink" type="datetime-local" placeholder="Nessuna scadenza" [ngModel]="expiresAt()" (ngModelChange)="expiresAt.set($event)" />
+            </label>
+            <label class="grid gap-2 text-xs font-bold text-ink-muted">Numero massimo download
+              <input class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-3 text-sm text-ink" type="number" inputmode="numeric" min="1" max="10000" placeholder="Senza limite" [ngModel]="maxDownloads()" (ngModelChange)="maxDownloads.set($event)" />
+            </label>
+          </div>
+        } @else {
+          <div class="grid gap-5">
+            <label class="grid gap-2 text-xs font-bold text-ink-muted">Email collaboratore
+              <input class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-3 text-sm text-ink" type="email" placeholder="collaboratore@studio.it" [ngModel]="email()" (ngModelChange)="email.set($event)" />
+            </label>
+            <label class="grid gap-2 text-xs font-bold text-ink-muted">Ruolo
+              <ph-select ariaLabel="Ruolo collaboratore" placeholder="Seleziona ruolo" [options]="roleOptions" [ngModel]="role()" (ngModelChange)="role.set($event)" />
+            </label>
+            <div class="rounded-xl border border-stroke bg-panel-raised p-4">
+              <strong class="text-sm">Ambito: {{ target().kind === 'project' ? 'questo progetto' : target().kind === 'folder' ? 'questa cartella' : 'questo file' }}</strong>
+              <p class="mt-1 text-xs leading-5 text-ink-muted">L’invito assegna soltanto i permessi del ruolo nell’ambito selezionato e nel percorso necessario a raggiungerlo.</p>
+            </div>
+          </div>
+        }
+
+        @if (error()) { <div class="mt-5 rounded-ui border border-negative/30 bg-negative/8 p-3 text-sm text-negative">{{ error() }}</div> }
+        @if (!resultUrl()) {
+          <footer class="mt-6 flex justify-end gap-2 border-t border-stroke pt-5">
+            <button class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold" type="button" (click)="closed.emit()">Annulla</button>
+            <button class="min-h-11 rounded-ui bg-brand px-5 text-sm font-bold text-white disabled:opacity-45" type="button" [disabled]="busy()" (click)="submit()">{{ busy() ? 'Creazione…' : mode() === 'delivery' ? 'Crea link' : 'Invia invito' }}</button>
+          </footer>
+        }
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,860 @@
+<div
+  [class]="
+    ui.sidebarCollapsed()
+      ? 'grid min-h-dvh grid-cols-[74px_minmax(0,1fr)] bg-canvas text-ink'
+      : 'grid min-h-dvh grid-cols-[74px_minmax(0,1fr)] bg-canvas text-ink lg:grid-cols-[260px_minmax(0,1fr)]'
+  "
+>
+  <aside
+    class="sticky top-0 z-40 flex h-dvh min-w-0 flex-col overflow-visible border-r border-stroke bg-sidebar px-2.5 py-4 lg:px-3"
+  >
+    <div class="flex min-h-12 items-center gap-3 px-1.5">
+      <a
+        class="flex min-w-0 items-center gap-3 text-ink no-underline"
+        routerLink="/panoramica"
+        aria-label="PortfolioHub, panoramica"
+      >
+        <span
+          class="grid size-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep font-black text-white shadow-[0_8px_24px_rgba(39,116,255,.3)]"
+          >P</span
+        >
+        <span
+          class="hidden truncate font-extrabold lg:block"
+          [class.!hidden]="ui.sidebarCollapsed()"
+          >PortfolioHub</span
+        >
+      </a>
+      <button
+        [class]="
+          ui.sidebarCollapsed()
+            ? 'sidebar-edge-toggle absolute top-[72px] left-1/2 z-50 hidden size-8 -translate-x-1/2 shrink-0 place-items-center rounded-full border border-stroke bg-panel-raised text-base text-ink-muted shadow-lg transition hover:border-brand/40 hover:text-ink lg:grid'
+            : 'sidebar-edge-toggle absolute top-6 -right-4 z-50 hidden size-8 shrink-0 place-items-center rounded-full border border-stroke bg-panel-raised text-base text-ink-muted shadow-lg transition hover:border-brand/40 hover:text-ink lg:grid'
+        "
+        type="button"
+        (click)="ui.toggleSidebar()"
+        [attr.aria-label]="ui.sidebarCollapsed() ? 'Espandi sidebar' : 'Richiudi sidebar'"
+      >
+        <span aria-hidden="true">{{ ui.sidebarCollapsed() ? '›' : '‹' }}</span>
+      </button>
+    </div>
+
+    <div
+      class="workspace-switch-area"
+      [class.mt-14]="ui.sidebarCollapsed()"
+      [class.mt-5]="!ui.sidebarCollapsed()"
+      #workspaceSwitchArea
+    >
+      <button
+        class="group grid min-h-14 w-full grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-2 rounded-card border border-stroke bg-panel-raised px-2 text-left text-ink transition hover:border-brand/40"
+        type="button"
+        aria-label="Cambia workspace"
+        [attr.aria-expanded]="workspacePanelOpen()"
+        (click)="toggleWorkspacePanel()"
+      >
+        <span
+          class="grid size-9 place-items-center rounded-xl bg-panel-strong text-[10px] font-black"
+          >{{ workspaces.current()?.workspace.name?.slice(0, 2)?.toUpperCase() ?? 'PH' }}</span
+        >
+        <span class="hidden min-w-0 lg:block" [class.!hidden]="ui.sidebarCollapsed()"
+          ><strong class="block truncate text-xs">{{
+            workspaces.current()?.workspace.name ?? 'Caricamento…'
+          }}</strong
+          ><small class="mt-1 block truncate text-[10px] text-ink-muted"
+            >Workspace {{ workspaces.current()?.workspace.plan ?? 'free' }}</small
+          ></span
+        >
+        <svg
+          class="hidden shrink-0 text-ink-muted transition-transform group-aria-expanded:rotate-180 lg:block"
+          [class.!hidden]="ui.sidebarCollapsed()"
+          aria-hidden="true"
+          viewBox="0 0 12 12"
+          width="12"
+          height="12"
+        >
+          <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </button>
+      @if (workspacePanelOpen()) {
+        <section
+          class="fixed z-[220] w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-card border border-stroke bg-panel/95 shadow-float backdrop-blur-xl"
+          data-workspace-panel
+          data-header-overlay
+          role="dialog"
+          aria-label="Seleziona workspace"
+          phAppendToBody
+          [phAppendToBodyAnchor]="workspaceSwitchArea"
+        >
+          <header class="border-b border-stroke px-4 py-3.5">
+            <span class="text-[9px] font-black tracking-[.14em] text-brand uppercase"
+              >I tuoi workspace</span
+            >
+            <div class="mt-1 flex items-center justify-between gap-3">
+              <strong class="text-sm">Cambia spazio di lavoro</strong>
+              <small class="text-[10px] text-ink-muted"
+                >{{ workspaces.capabilities().owned }} /
+                {{ workspaces.capabilities().limit ?? '∞' }}</small
+              >
+            </div>
+          </header>
+          <div class="max-h-[min(380px,55dvh)] overflow-y-auto p-2">
+            @for (item of workspaces.items(); track item.workspace.id) {
+              <button
+                [class]="
+                  item.workspace.id === workspaces.current()?.workspace.id
+                    ? 'grid min-h-16 w-full grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-3 rounded-ui border-0 bg-brand/10 px-3 text-left transition'
+                    : 'grid min-h-16 w-full grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-3 rounded-ui border-0 bg-transparent px-3 text-left transition hover:bg-panel-raised'
+                "
+                type="button"
+                (click)="selectWorkspace(item.workspace.id)"
+              >
+                <span
+                  class="grid size-9 place-items-center rounded-lg bg-panel-strong text-[9px] font-black text-brand"
+                  >{{ item.workspace.name.slice(0, 2).toUpperCase() }}</span
+                >
+                <span class="min-w-0"
+                  ><strong class="block truncate text-sm text-ink">{{ item.workspace.name }}</strong
+                  ><small class="mt-1 block text-[10px] text-ink-muted capitalize"
+                    >{{ item.membership.role }} · {{ item.workspace.plan }}</small
+                  ></span
+                >
+                @if (item.workspace.id === workspaces.current()?.workspace.id) {
+                  <span
+                    class="grid size-6 place-items-center rounded-full bg-brand text-xs text-white"
+                    >✓</span
+                  >
+                }
+              </button>
+            }
+          </div>
+          <footer class="border-t border-stroke bg-panel-raised/70 p-2">
+            @if (workspaces.capabilities().canCreate) {
+              <button
+                class="flex min-h-12 w-full items-center justify-between rounded-ui border-0 bg-brand/10 px-3 text-left text-sm font-bold text-brand transition hover:bg-brand/16"
+                type="button"
+                (click)="openWorkspaceCreation()"
+              >
+                <span>＋ Crea un altro workspace</span><span aria-hidden="true">→</span>
+              </button>
+            } @else {
+              <button
+                class="flex min-h-14 w-full items-center justify-between gap-3 rounded-ui border-0 bg-transparent px-3 text-left"
+                type="button"
+                (click)="openWorkspacePlans()"
+              >
+                <span
+                  ><strong class="block text-xs text-ink">Limite del piano raggiunto</strong
+                  ><small class="mt-1 block text-[10px] leading-4 text-ink-muted"
+                    >Il piano {{ workspaces.capabilities().entitlementPlan }} consente
+                    {{ workspaces.capabilities().limit }} workspace.</small
+                  ></span
+                ><span class="shrink-0 text-brand">Piani →</span>
+              </button>
+            }
+          </footer>
+        </section>
+      }
+    </div>
+
+    <span
+      class="mt-7 hidden px-2 text-[9px] font-black tracking-[.16em] text-ink-muted uppercase lg:block"
+      [class.!hidden]="ui.sidebarCollapsed()"
+      >Workspace</span
+    >
+    <nav class="mt-3 grid gap-1" aria-label="Navigazione principale">
+      @for (item of workspaceNav; track item.route) {
+        <a
+          class="grid min-h-11 grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-2 rounded-ui px-1.5 text-ink-muted no-underline transition hover:bg-panel-raised hover:text-ink [&.active]:bg-brand [&.active]:text-white"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <span
+            class="grid size-8 place-items-center rounded-lg border border-stroke text-[9px] font-black"
+            aria-hidden="true"
+            >{{ item.icon }}</span
+          >
+          <span class="hidden text-sm font-bold lg:block" [class.!hidden]="ui.sidebarCollapsed()">{{
+            item.label
+          }}</span>
+          @if (item.badge) {
+            <span
+              class="hidden rounded-full bg-panel-strong px-2 py-0.5 text-[9px] font-black lg:block"
+              [class.!hidden]="ui.sidebarCollapsed()"
+              >{{ item.badge }}</span
+            >
+          }
+        </a>
+      }
+    </nav>
+
+    <div class="mt-auto">
+      <span
+        class="hidden px-2 text-[9px] font-black tracking-[.16em] text-ink-muted uppercase lg:block"
+        [class.!hidden]="ui.sidebarCollapsed()"
+        >Gestione</span
+      >
+      <nav class="mt-3 grid gap-1" aria-label="Navigazione di gestione">
+        @for (item of managementNav; track item.route) {
+          <a
+            class="grid min-h-11 grid-cols-[36px_minmax(0,1fr)] items-center gap-2 rounded-ui px-1.5 text-ink-muted no-underline transition hover:bg-panel-raised hover:text-ink [&.active]:bg-brand [&.active]:text-white"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+          >
+            <span
+              class="grid size-8 place-items-center rounded-lg border border-stroke text-[9px] font-black"
+              aria-hidden="true"
+              >{{ item.icon }}</span
+            >
+            <span
+              class="hidden text-sm font-bold lg:block"
+              [class.!hidden]="ui.sidebarCollapsed()"
+              >{{ item.label }}</span
+            >
+          </a>
+        }
+      </nav>
+      <div class="mt-5 hidden px-2 lg:block" [class.!hidden]="ui.sidebarCollapsed()">
+        <div class="flex justify-between text-[10px] text-ink-muted">
+          <span>Storage</span>
+          @if (workspaces.storageLoading()) {
+            <span class="h-3 w-16 animate-pulse rounded bg-panel-strong"></span>
+          } @else {
+            <span class="tabular-nums">{{ storageUsedLabel() }} / {{ storageLimitLabel() }}</span>
+          }
+        </div>
+        @if (storagePercentage() !== null) {
+          <span
+            class="mt-2 block h-1 overflow-hidden rounded-full bg-panel-strong"
+            role="progressbar"
+            aria-label="Storage utilizzato"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-valuenow]="storagePercentage()"
+            [attr.aria-valuetext]="storageUsedLabel() + ' su ' + storageLimitLabel()"
+            ><i
+              class="block h-full rounded-full bg-gradient-to-r from-brand to-accent transition-[width] duration-500"
+              [style.width.%]="storagePercentage()"
+            ></i
+          ></span>
+        } @else {
+          <span
+            class="mt-2 block h-1 overflow-hidden rounded-full bg-gradient-to-r from-brand/70 to-accent/70"
+            [attr.aria-label]="storageUsedLabel() + ' utilizzati, piano illimitato'"
+          ></span>
+        }
+      </div>
+      <button
+        class="mt-3 grid min-h-10 w-full grid-cols-[36px_1fr] items-center gap-2 border-0 bg-transparent px-1.5 text-left text-ink-muted"
+        type="button"
+        (click)="ui.restartOnboarding()"
+      >
+        <span class="grid size-8 place-items-center" aria-hidden="true">?</span
+        ><span class="hidden text-xs font-bold lg:block" [class.!hidden]="ui.sidebarCollapsed()"
+          >Aiuto e tour</span
+        >
+      </button>
+    </div>
+  </aside>
+
+  <section class="min-w-0">
+    <header
+      class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-4 border-b border-stroke bg-canvas/85 px-4 backdrop-blur-xl sm:px-6"
+    >
+      <div class="hidden min-w-0 sm:block">
+        <small class="block truncate text-[10px] text-ink-muted">{{
+          workspaces.current()?.workspace.name ?? 'PortfolioHub'
+        }}</small
+        ><strong class="mt-1 block truncate text-xs">Il tuo spazio di lavoro</strong>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <div #searchArea class="search-area">
+          <form
+            class="hidden min-h-10 w-[min(360px,34vw)] grid-cols-[1fr_auto_auto] items-center rounded-ui border border-stroke bg-panel-raised px-3 sm:grid"
+            data-global-search
+            (submit)="submitSearch($event)"
+          >
+            <label class="sr-only" for="global-search">Cerca</label>
+            <input
+              class="min-w-0 border-0 bg-transparent text-xs text-ink outline-none"
+              id="global-search"
+              name="globalSearch"
+              type="search"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="queueSearch($event)"
+              placeholder="Cerca progetti, clienti o file…"
+              autocomplete="off"
+            />
+            <button
+              class="grid size-7 shrink-0 place-items-center rounded-md border-0 bg-transparent text-ink-muted transition hover:bg-panel-strong hover:text-ink"
+              type="submit"
+              [attr.aria-label]="searching() ? 'Ricerca in corso' : 'Cerca'"
+            >
+              @if (searching()) {
+                <span class="leading-none" aria-hidden="true">…</span>
+              } @else {
+                <svg aria-hidden="true" viewBox="0 0 20 20" width="17" height="17">
+                  <path
+                    d="M16 4v5a3 3 0 0 1-3 3H5m3-3-3 3 3 3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              }
+            </button>
+            <kbd
+              class="flex h-7 items-center justify-center rounded-md border border-stroke px-2 text-[9px] leading-none font-bold text-ink-muted"
+              >⌘ K</kbd
+            >
+          </form>
+          @if (searchOpen()) {
+            <section
+              class="fixed z-[200] w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-card border border-stroke bg-panel/95 shadow-float backdrop-blur-xl"
+              role="dialog"
+              aria-label="Risultati ricerca"
+              data-header-overlay
+              phAppendToBody
+              [phAppendToBodyAnchor]="searchArea"
+            >
+              <header
+                class="flex min-h-14 items-center justify-between border-b border-stroke px-4"
+              >
+                <strong class="text-sm">Risultati</strong
+                ><button
+                  class="grid size-8 place-items-center rounded-lg border-0 bg-panel-raised text-ink-muted"
+                  (click)="searchOpen.set(false)"
+                >
+                  ×
+                </button>
+              </header>
+              @if (searching()) {
+                <div class="grid gap-3 p-4" aria-label="Ricerca in corso">
+                  @for (item of [1, 2, 3]; track item) {
+                    <div class="grid grid-cols-[36px_1fr] items-center gap-3">
+                      <span class="size-9 animate-pulse rounded-lg bg-panel-strong"></span>
+                      <span class="grid gap-2"
+                        ><i class="h-3 w-2/3 animate-pulse rounded bg-panel-strong"></i
+                        ><i class="h-2.5 w-1/2 animate-pulse rounded bg-panel-strong"></i
+                      ></span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                @for (result of searchResults(); track result.type + result.id) {
+                  <button
+                    type="button"
+                    class="grid min-h-16 w-full grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-3 border-0 border-t border-stroke bg-transparent px-4 text-left transition first:border-t-0 hover:bg-panel-raised"
+                    (click)="openSearchResult(result)"
+                  >
+                    <span
+                      class="grid size-9 place-items-center rounded-lg bg-brand/12 text-[9px] font-black text-brand"
+                      >{{ result.type.slice(0, 2).toUpperCase() }}</span
+                    >
+                    <span
+                      ><strong class="block truncate text-xs text-ink">{{ result.title }}</strong
+                      ><small class="mt-1 block truncate text-[10px] text-ink-muted">{{
+                        result.subtitle
+                      }}</small></span
+                    ><i class="not-italic text-brand">→</i>
+                  </button>
+                } @empty {
+                  <div class="p-8 text-center text-xs text-ink-muted">
+                    Nessun risultato per “{{ searchQuery() }}”.
+                  </div>
+                }
+              }
+            </section>
+          }
+        </div>
+        <button
+          class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-ink"
+          type="button"
+          (click)="ui.toggleTheme()"
+          aria-label="Cambia tema"
+        >
+          <span aria-hidden="true">{{ ui.theme() === 'dark' ? '☾' : '☀' }}</span>
+        </button>
+        <div class="notification-area" #notificationArea>
+          <button
+            class="relative grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-ink"
+            type="button"
+            aria-label="Notifiche"
+            [attr.aria-expanded]="notificationPanelOpen()"
+            (click)="toggleNotifications()"
+          >
+            <svg
+              data-notification-icon
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              width="19"
+              height="19"
+            >
+              <path
+                d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            @if (unreadNotifications()) {
+              <i
+                class="absolute top-2 right-2 size-2 rounded-full border border-panel bg-brand"
+              ></i>
+            }
+          </button>
+          @if (notificationPanelOpen()) {
+            <section
+              class="fixed z-[200] w-[min(430px,calc(100vw-2rem))] overflow-hidden rounded-card border border-stroke bg-panel/95 shadow-float backdrop-blur-xl"
+              data-notification-panel
+              data-header-overlay
+              role="dialog"
+              aria-label="Notifiche"
+              phAppendToBody
+              [phAppendToBodyAnchor]="notificationArea"
+            >
+              <header
+                class="flex min-h-16 items-center justify-between gap-3 border-b border-stroke px-4"
+              >
+                <div>
+                  <small class="block text-[9px] font-black tracking-[.14em] text-ink-muted"
+                    >CENTRO ATTIVITÀ</small
+                  ><strong class="mt-1 block text-sm">Notifiche</strong>
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (unreadNotifications()) {
+                    <button
+                      class="!w-auto !px-2.5 text-[11px] font-bold"
+                      type="button"
+                      (click)="markAllNotificationsRead()"
+                    >
+                      Segna lette
+                    </button>
+                  }
+                  <button
+                    type="button"
+                    (click)="notificationPanelOpen.set(false)"
+                    aria-label="Chiudi"
+                  >
+                    ×
+                  </button>
+                </div>
+              </header>
+              <div class="flex gap-1 border-b border-line bg-panel-soft/70 p-2">
+                <button
+                  class="min-h-9 flex-1 rounded-lg border-0 px-3 text-xs font-extrabold transition"
+                  [class]="
+                    notificationFilter() === 'unread'
+                      ? 'bg-brand text-white shadow-sm'
+                      : 'bg-transparent text-ink-muted hover:bg-panel-raised hover:text-ink'
+                  "
+                  type="button"
+                  (click)="notificationFilter.set('unread')"
+                >
+                  Da leggere <span class="ml-1 opacity-75">{{ unreadNotifications() }}</span>
+                </button>
+                <button
+                  class="min-h-9 flex-1 rounded-lg border-0 px-3 text-xs font-extrabold transition"
+                  [class]="
+                    notificationFilter() === 'all'
+                      ? 'bg-brand text-white shadow-sm'
+                      : 'bg-transparent text-ink-muted hover:bg-panel-raised hover:text-ink'
+                  "
+                  type="button"
+                  (click)="notificationFilter.set('all')"
+                >
+                  Tutte
+                </button>
+              </div>
+              <div class="max-h-[min(460px,60dvh)] overflow-y-auto">
+                @if (notificationsLoading()) {
+                  <div class="space-y-3 p-4" aria-label="Caricamento notifiche">
+                    @for (row of [1, 2, 3]; track row) {
+                      <div class="flex animate-pulse gap-3">
+                        <span class="size-8 rounded-full bg-panel-raised"></span>
+                        <span class="flex-1 space-y-2"
+                          ><i class="block h-3 w-2/3 rounded bg-panel-raised"></i
+                          ><i class="block h-3 w-full rounded bg-panel-raised"></i
+                        ></span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  @for (item of visibleNotifications(); track item.id) {
+                    <button
+                      type="button"
+                      class="grid min-h-20 w-full grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-3 border-0 border-t border-stroke bg-transparent px-4 text-left transition first:border-t-0 hover:bg-panel-raised"
+                      (click)="openNotification(item)"
+                    >
+                      <i class="size-2 rounded-full bg-stroke" [class.!bg-brand]="!item.readAt"></i
+                      ><span
+                        ><strong class="block text-xs text-ink">{{ item.title }}</strong
+                        ><small class="mt-1 block truncate text-[11px] text-ink-muted">{{
+                          item.body
+                        }}</small
+                        ><em class="mt-1 block text-[10px] not-italic text-ink-soft">{{
+                          notificationTime(item.createdAt)
+                        }}</em></span
+                      ><b class="text-brand">→</b>
+                    </button>
+                  } @empty {
+                    <div class="p-8 text-center text-xs text-ink-muted">
+                      {{
+                        notificationFilter() === 'unread'
+                          ? 'Hai letto tutto.'
+                          : 'Nessuna notifica nel workspace.'
+                      }}
+                    </div>
+                  }
+                }
+              </div>
+              <footer class="border-t border-line bg-panel-soft/60 p-2">
+                <button
+                  class="flex min-h-10 w-full items-center justify-between rounded-lg border-0 bg-transparent px-3 text-left text-xs font-bold text-ink-muted transition hover:bg-panel-raised hover:text-ink"
+                  type="button"
+                  (click)="openNotificationPreferences()"
+                >
+                  Personalizza notifiche <span aria-hidden="true">→</span>
+                </button>
+              </footer>
+            </section>
+          }
+        </div>
+        <div class="profile-area" #profileArea>
+          <button
+            class="group flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-stroke bg-panel-raised p-1.5 pr-2.5 text-ink shadow-sm transition hover:border-brand/40 hover:bg-panel-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            type="button"
+            aria-label="Menu account"
+            [attr.aria-expanded]="profilePanelOpen()"
+            (click)="toggleProfile()"
+          >
+            <span
+              class="grid size-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-brand to-brand-deep text-[10px] font-black text-white shadow-sm"
+              >{{ auth.principal()?.displayName?.slice(0, 2)?.toUpperCase() ?? 'PH' }}</span
+            >
+            <span class="hidden max-w-28 truncate text-xs font-extrabold xl:block">{{
+              auth.principal()?.displayName ?? 'Profilo'
+            }}</span>
+            <svg
+              class="shrink-0 text-ink-muted transition-transform group-aria-expanded:rotate-180"
+              aria-hidden="true"
+              viewBox="0 0 12 12"
+              width="12"
+              height="12"
+            >
+              <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </button>
+          @if (profilePanelOpen()) {
+            <section
+              class="fixed z-[200] w-[min(350px,calc(100vw-2rem))] overflow-hidden rounded-card border border-stroke bg-panel/95 shadow-float backdrop-blur-xl"
+              data-profile-panel
+              data-header-overlay
+              role="dialog"
+              aria-label="Account"
+              phAppendToBody
+              [phAppendToBodyAnchor]="profileArea"
+            >
+              <header class="flex items-center gap-3 border-b border-stroke p-4">
+                <span
+                  class="grid size-11 place-items-center rounded-xl bg-brand text-xs font-black text-white"
+                  >{{ auth.principal()?.displayName?.slice(0, 2)?.toUpperCase() ?? 'PH' }}</span
+                >
+                <div>
+                  <strong class="block text-sm">{{
+                    auth.principal()?.displayName ?? 'Account PortfolioHub'
+                  }}</strong>
+                  <small class="mt-1 block text-xs text-ink-muted">{{
+                    auth.principal()?.email
+                  }}</small>
+                </div>
+              </header>
+              <div class="grid gap-1 p-2">
+                <button
+                  class="grid min-h-14 grid-cols-[32px_1fr_auto] items-center gap-2 rounded-ui border-0 bg-transparent px-3 text-left hover:bg-panel-raised"
+                  type="button"
+                  (click)="openSettings()"
+                >
+                  <span aria-hidden="true">⚙</span
+                  ><span
+                    ><strong class="block text-xs text-ink">Impostazioni</strong
+                    ><small class="mt-1 block text-[10px] text-ink-muted"
+                      >Profilo, piano e sicurezza</small
+                    ></span
+                  ><i class="not-italic text-brand">→</i>
+                </button>
+                <button
+                  class="grid min-h-14 grid-cols-[32px_1fr_auto] items-center gap-2 rounded-ui border-0 bg-transparent px-3 text-left hover:bg-panel-raised"
+                  type="button"
+                  (click)="restartOnboarding()"
+                >
+                  <span aria-hidden="true">?</span
+                  ><span
+                    ><strong class="block text-xs text-ink">Tour guidato</strong
+                    ><small class="mt-1 block text-[10px] text-ink-muted"
+                      >Rivedi le funzioni principali</small
+                    ></span
+                  ><i class="not-italic text-brand">→</i>
+                </button>
+              </div>
+              <footer class="border-t border-stroke p-2">
+                <button
+                  class="min-h-11 w-full rounded-ui border-0 bg-transparent px-3 text-left text-xs font-bold text-negative hover:bg-negative/8"
+                  type="button"
+                  (click)="logout()"
+                >
+                  <span aria-hidden="true">↪</span> Esci dall’account
+                </button>
+              </footer>
+            </section>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="min-w-0 p-4 pb-24 sm:p-6 sm:pb-24"><router-outlet /></main>
+  </section>
+</div>
+
+@if (workspaceCreateOpen()) {
+  <div
+    class="fixed inset-0 z-[8000] grid place-items-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="new-workspace-title"
+    phAppendToBody
+  >
+    <button
+      class="absolute inset-0 w-full border-0 bg-slate-950/80 backdrop-blur-md"
+      type="button"
+      (click)="closeDialogs()"
+      aria-label="Chiudi"
+    ></button>
+    <form
+      class="relative w-[min(620px,100%)] animate-rise rounded-shell border border-stroke bg-panel p-6 shadow-float"
+      (submit)="createWorkspace($event)"
+    >
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <span class="text-[10px] font-black tracking-[.15em] text-brand uppercase"
+            >Workspace</span
+          >
+          <h2 class="mt-2 text-2xl font-extrabold" id="new-workspace-title">
+            Crea un nuovo workspace
+          </h2>
+          <p class="mt-1 text-sm leading-6 text-ink-muted">
+            Sarà uno spazio separato con membri, progetti, consegne e piano propri.
+          </p>
+        </div>
+        <button
+          class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
+          type="button"
+          (click)="closeDialogs()"
+          aria-label="Chiudi"
+        >
+          ×
+        </button>
+      </header>
+      <div class="mt-6 grid gap-5">
+        <label class="grid gap-2 text-sm font-bold"
+          >Nome workspace
+          <input
+            class="min-h-12 w-full rounded-ui border border-stroke bg-panel-raised px-3.5 text-ink outline-none focus:border-brand"
+            name="workspaceName"
+            type="text"
+            placeholder="Studio creativo"
+            [ngModel]="newWorkspaceName()"
+            (ngModelChange)="newWorkspaceName.set($event)"
+            required
+          />
+        </label>
+        <label class="grid gap-2 text-sm font-bold"
+          >Tipo di workspace
+          <ph-select
+            name="workspaceType"
+            ariaLabel="Tipo di workspace"
+            placeholder="Seleziona il tipo"
+            [options]="workspaceTypeOptions"
+            [ngModel]="newWorkspaceType()"
+            (ngModelChange)="newWorkspaceType.set($event)"
+          />
+        </label>
+      </div>
+      <footer class="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <button
+          class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+          type="button"
+          (click)="closeDialogs()"
+        >
+          Annulla
+        </button>
+        <button
+          class="min-h-11 rounded-ui border-0 bg-brand px-5 text-sm font-bold text-white disabled:opacity-50"
+          type="submit"
+          [disabled]="newWorkspaceName().trim().length < 2 || workspaceCreating()"
+        >
+          {{ workspaceCreating() ? 'Creazione…' : 'Crea workspace' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+}
+
+@if (projectDialogOpen()) {
+  <div
+    class="fixed inset-0 z-[8000] grid place-items-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="new-project-title"
+    phAppendToBody
+  >
+    <button
+      class="absolute inset-0 w-full border-0 bg-slate-950/80 backdrop-blur-md"
+      type="button"
+      (click)="closeDialogs()"
+      aria-label="Chiudi"
+    ></button>
+    <form
+      class="relative w-[min(620px,100%)] animate-rise rounded-shell border border-stroke bg-panel p-6 shadow-float"
+      (submit)="createProject($event)"
+    >
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <span class="text-[10px] font-black tracking-[.15em] text-brand uppercase">Progetto</span>
+          <h2 class="mt-2 text-2xl font-extrabold" id="new-project-title">
+            Nuovo spazio di lavoro
+          </h2>
+          <p class="mt-1 text-sm text-ink-muted">
+            Il cliente può essere associato ora o in seguito.
+          </p>
+        </div>
+        <button
+          class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
+          type="button"
+          (click)="closeDialogs()"
+          aria-label="Chiudi"
+        >
+          ×
+        </button>
+      </header>
+      <label class="mt-6 grid gap-2 text-sm font-bold"
+        >Nome progetto<input
+          class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-3.5 text-ink outline-none focus:border-brand"
+          name="projectName"
+          type="text"
+          [(ngModel)]="projectName"
+          placeholder="Campagna estate"
+          required
+      /></label>
+      <footer class="mt-6 flex justify-end gap-2">
+        <button
+          class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+          type="button"
+          (click)="closeDialogs()"
+        >
+          Annulla
+        </button>
+        <button
+          class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white"
+          type="submit"
+        >
+          Crea progetto
+        </button>
+      </footer>
+    </form>
+  </div>
+}
+
+<ph-dialog-host />
+
+@if (ui.onboardingVisible()) {
+  <div
+    class="fixed inset-0 z-[8500] grid place-items-center bg-slate-950/80 p-4 backdrop-blur-md"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tour-title"
+    phAppendToBody
+  >
+    <section
+      class="w-[min(500px,100%)] animate-rise rounded-shell border border-stroke bg-panel p-7 text-center shadow-float"
+    >
+      <span class="text-[10px] font-black tracking-[.14em] text-ink-muted"
+        >0{{ ui.onboardingStep() + 1 }} / 03</span
+      >
+      @switch (ui.onboardingStep()) {
+        @case (0) {
+          <span
+            class="mx-auto mt-6 grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand-deep text-2xl font-black text-white"
+            >P</span
+          >
+          <h2 class="mt-5 text-2xl font-extrabold" id="tour-title">Il lavoro, ordinato.</h2>
+          <p class="mt-3 text-sm leading-7 text-ink-muted">
+            PortfolioHub raccoglie progetti, file e consegne senza confondere il cliente con il
+            team.
+          </p>
+        }
+        @case (1) {
+          <span
+            class="mx-auto mt-6 grid h-20 w-40 grid-cols-[1fr_1px_1fr] place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand-deep text-xs font-black text-white"
+            >CL <i class="h-8 w-px bg-white/30"></i> CO</span
+          >
+          <h2 class="mt-5 text-2xl font-extrabold" id="tour-title">Due link, due scopi.</h2>
+          <p class="mt-3 text-sm leading-7 text-ink-muted">
+            Il link cliente consegna il lavoro. Il link collaboratore assegna un ruolo operativo
+            autenticato.
+          </p>
+        }
+        @default {
+          <span
+            class="mx-auto mt-6 grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-positive to-accent text-2xl font-black text-slate-950"
+            >✓</span
+          >
+          <h2 class="mt-5 text-2xl font-extrabold" id="tour-title">Sei pronto.</h2>
+          <p class="mt-3 text-sm leading-7 text-ink-muted">
+            Questo tour usa dati dimostrativi: puoi saltarlo ora e riavviarlo in qualsiasi momento
+            da Aiuto.
+          </p>
+        }
+      }
+      <div class="mt-6 h-1 overflow-hidden rounded-full bg-panel-strong">
+        <i
+          class="block h-full bg-gradient-to-r from-brand to-accent transition-[width]"
+          [style.width.%]="((ui.onboardingStep() + 1) / 3) * 100"
+        ></i>
+      </div>
+      <footer class="mt-6 flex justify-between gap-3">
+        <button
+          class="min-h-11 rounded-ui border-0 bg-transparent px-4 text-sm font-bold text-ink-muted"
+          type="button"
+          (click)="ui.completeOnboarding()"
+        >
+          Salta</button
+        ><button
+          class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white"
+          type="button"
+          (click)="ui.nextOnboarding()"
+        >
+          {{ ui.onboardingStep() === 2 ? 'Inizia' : 'Continua' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (ui.notice(); as notice) {
+  <div class="pointer-events-none fixed inset-x-4 top-20 z-[260] flex justify-end sm:inset-x-6">
+    <div class="pointer-events-auto w-full max-w-md">
+      <ph-notice-banner
+        [tone]="notice.tone"
+        [title]="notice.title"
+        [message]="notice.message"
+        [actionLabel]="notice.actionLabel ?? ''"
+        (action)="openNoticeAction()"
+        (closed)="ui.dismissNotice()"
+      />
+    </div>
+  </div>
+}

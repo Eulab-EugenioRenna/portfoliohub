@@ -1,0 +1,27 @@
+import { registerAs } from '@nestjs/config';
+
+export const integrationsConfig = registerAs('integrations', () => ({
+  redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  rabbitMqUrl: process.env.RABBITMQ_URL ?? 'amqp://portfoliohub:portfoliohub@localhost:5672',
+  localDataPath: process.env.LOCAL_DATA_PATH ?? './var/portfoliohub',
+  storageProvider: process.env.STORAGE_PROVIDER ?? 'local',
+  arubaGatewayUrl: process.env.ARUBA_GATEWAY_URL ?? '',
+  arubaGatewayKeyId: process.env.ARUBA_GATEWAY_KEY_ID ?? '',
+  arubaGatewaySecret: process.env.ARUBA_GATEWAY_SECRET ?? '',
+  localMasterKey: process.env.LOCAL_MASTER_KEY ?? '',
+  sessionPepper: process.env.SESSION_PEPPER ?? '',
+  emailProvider: process.env.EMAIL_PROVIDER ?? 'local',
+  resendApiKey: process.env.RESEND_API_KEY ?? '',
+  emailFrom: process.env.EMAIL_FROM ?? 'PortfolioHub <noreply@localhost>',
+  adminEmail: process.env.ADMIN_EMAIL ?? '',
+  adminPassword: process.env.ADMIN_PASSWORD ?? '',
+  uploadLockTtlMs: Number(process.env.UPLOAD_LOCK_TTL_MS ?? 30_000),
+  fileFinalizeConcurrency: Number(process.env.FILE_FINALIZE_CONCURRENCY ?? 4),
+  fileMaintenanceConcurrency: Number(process.env.FILE_MAINTENANCE_CONCURRENCY ?? 2),
+  storageDeleteBatchSize: Number(process.env.STORAGE_DELETE_BATCH_SIZE ?? 250),
+  storageCacheMaxBytes: Number(process.env.STORAGE_CACHE_MAX_BYTES ?? 42_949_672_960),
+  uploadMaxActivePerAccount: Number(process.env.UPLOAD_MAX_ACTIVE_PER_ACCOUNT ?? 100),
+  uploadMaxActivePerIp: Number(process.env.UPLOAD_MAX_ACTIVE_PER_IP ?? 100),
+  fileFinalizeLeaseMs: Number(process.env.FILE_FINALIZE_LEASE_MS ?? 60_000),
+  outboxPublisherEnabled: process.env.OUTBOX_PUBLISHER_ENABLED !== 'false',
+}));

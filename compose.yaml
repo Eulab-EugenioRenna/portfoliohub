@@ -1,0 +1,256 @@
+name: portfoliohub
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: portfoliohub
+      POSTGRES_USER: portfoliohub
+      POSTGRES_PASSWORD: portfoliohub
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfoliohub -d portfoliohub"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: portfoliohub
+      RABBITMQ_DEFAULT_PASS: portfoliohub
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 8s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  storage-init:
+    image: node:22-alpine
+    user: "0:0"
+    command: ["sh", "-c", "mkdir -p /data/portfoliohub && chown -R 1000:1000 /data/portfoliohub"]
+    restart: "no"
+    volumes:
+      - local-data:/data/portfoliohub
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DATABASE_URL: postgresql://portfoliohub:portfoliohub@postgres:5432/portfoliohub
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://portfoliohub:portfoliohub@rabbitmq:5672
+      LOCAL_DATA_PATH: /data/portfoliohub
+      LOCAL_MASTER_KEY: ${LOCAL_MASTER_KEY:-UG9ydGZvbGlvSHViTG9jYWxEZXZNYXN0ZXJLZXkzMiE=}
+      SESSION_PEPPER: ${SESSION_PEPPER:-portfoliohub-local-session-pepper-change-me}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-local}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-PortfolioHub <noreply@localhost>}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@portfoliohub.test}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-this-local-admin-password}
+      BILLING_PROVIDER: ${BILLING_PROVIDER:-local}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      ARUBA_GATEWAY_URL: ${ARUBA_GATEWAY_URL:-}
+      ARUBA_GATEWAY_KEY_ID: ${ARUBA_GATEWAY_KEY_ID:-}
+      ARUBA_GATEWAY_SECRET: ${ARUBA_GATEWAY_SECRET:-}
+      UPLOAD_LOCK_TTL_MS: ${UPLOAD_LOCK_TTL_MS:-30000}
+      UPLOAD_MAX_ACTIVE_PER_ACCOUNT: ${UPLOAD_MAX_ACTIVE_PER_ACCOUNT:-100}
+      UPLOAD_MAX_ACTIVE_PER_IP: ${UPLOAD_MAX_ACTIVE_PER_IP:-100}
+      STORAGE_CACHE_MAX_BYTES: ${STORAGE_CACHE_MAX_BYTES:-42949672960}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRO_MONTHLY_PRICE_ID: ${STRIPE_PRO_MONTHLY_PRICE_ID:-}
+      STRIPE_PRO_ANNUAL_PRICE_ID: ${STRIPE_PRO_ANNUAL_PRICE_ID:-}
+      STRIPE_UNLIMITED_MONTHLY_PRICE_ID: ${STRIPE_UNLIMITED_MONTHLY_PRICE_ID:-}
+      STRIPE_UNLIMITED_ANNUAL_PRICE_ID: ${STRIPE_UNLIMITED_ANNUAL_PRICE_ID:-}
+    depends_on:
+      storage-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/v1/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    volumes:
+      - local-data:/data/portfoliohub
+    develop:
+      watch:
+        - action: rebuild
+          path: apps/api
+        - action: rebuild
+          path: package-lock.json
+
+  preview-worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      APP_ORIGIN: http://localhost:8080
+      DATABASE_URL: postgresql://portfoliohub:portfoliohub@postgres:5432/portfoliohub
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://portfoliohub:portfoliohub@rabbitmq:5672
+      LOCAL_DATA_PATH: /data/portfoliohub
+      LOCAL_MASTER_KEY: ${LOCAL_MASTER_KEY:-UG9ydGZvbGlvSHViTG9jYWxEZXZNYXN0ZXJLZXkzMiE=}
+      SESSION_PEPPER: ${SESSION_PEPPER:-portfoliohub-local-session-pepper-change-me}
+      BILLING_PROVIDER: local
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      ARUBA_GATEWAY_URL: ${ARUBA_GATEWAY_URL:-}
+      ARUBA_GATEWAY_KEY_ID: ${ARUBA_GATEWAY_KEY_ID:-}
+      ARUBA_GATEWAY_SECRET: ${ARUBA_GATEWAY_SECRET:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    restart: unless-stopped
+    volumes:
+      - local-data:/data/portfoliohub
+    develop:
+      watch:
+        - action: rebuild
+          path: apps/api
+        - action: rebuild
+          path: apps/worker
+        - action: rebuild
+          path: package-lock.json
+
+  storage-worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    command: ["node", "dist/storage-worker.js"]
+    environment:
+      NODE_ENV: production
+      APP_ORIGIN: http://localhost:8080
+      DATABASE_URL: postgresql://portfoliohub:portfoliohub@postgres:5432/portfoliohub
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://portfoliohub:portfoliohub@rabbitmq:5672
+      LOCAL_DATA_PATH: /data/portfoliohub
+      LOCAL_MASTER_KEY: ${LOCAL_MASTER_KEY:-UG9ydGZvbGlvSHViTG9jYWxEZXZNYXN0ZXJLZXkzMiE=}
+      SESSION_PEPPER: ${SESSION_PEPPER:-portfoliohub-local-session-pepper-change-me}
+      BILLING_PROVIDER: local
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      ARUBA_GATEWAY_URL: ${ARUBA_GATEWAY_URL:-}
+      ARUBA_GATEWAY_KEY_ID: ${ARUBA_GATEWAY_KEY_ID:-}
+      ARUBA_GATEWAY_SECRET: ${ARUBA_GATEWAY_SECRET:-}
+      UPLOAD_LOCK_TTL_MS: ${UPLOAD_LOCK_TTL_MS:-30000}
+      FILE_FINALIZE_CONCURRENCY: ${FILE_FINALIZE_CONCURRENCY:-4}
+      FILE_MAINTENANCE_CONCURRENCY: ${FILE_MAINTENANCE_CONCURRENCY:-2}
+      FILE_FINALIZE_LEASE_MS: ${FILE_FINALIZE_LEASE_MS:-60000}
+      STORAGE_DELETE_BATCH_SIZE: ${STORAGE_DELETE_BATCH_SIZE:-250}
+      STORAGE_CACHE_MAX_BYTES: ${STORAGE_CACHE_MAX_BYTES:-42949672960}
+      OUTBOX_PUBLISHER_ENABLED: "false"
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      replicas: ${STORAGE_WORKER_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: 1G
+        reservations:
+          cpus: "0.50"
+          memory: 256M
+    restart: unless-stopped
+    volumes:
+      - local-data:/data/portfoliohub
+    develop:
+      watch:
+        - action: rebuild
+          path: apps/api
+        - action: rebuild
+          path: apps/worker
+        - action: rebuild
+          path: package-lock.json
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NGINX_CLIENT_MAX_BODY_SIZE: ${NGINX_CLIENT_MAX_BODY_SIZE:-101g}
+      NGINX_ENVSUBST_FILTER: ^NGINX_CLIENT_MAX_BODY_SIZE$
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://127.0.0.1/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: apps/web
+        - action: rebuild
+          path: package-lock.json
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${ADMIN_PORT:-8081}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: rebuild
+          path: apps/admin
+        - action: rebuild
+          path: apps/web/src/app/ui
+        - action: rebuild
+          path: package-lock.json
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  local-data:

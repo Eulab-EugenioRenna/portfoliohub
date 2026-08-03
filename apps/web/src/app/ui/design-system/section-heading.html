@@ -1,0 +1,16 @@
+<header class="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+  <div class="min-w-0">
+    @if (eyebrow()) {
+      <span class="mb-2 block text-xs font-black tracking-[0.16em] text-brand uppercase">
+        {{ eyebrow() }}
+      </span>
+    }
+    <h2 class="m-0 text-xl font-extrabold tracking-[-0.025em] text-ink md:text-2xl">
+      {{ title() }}
+    </h2>
+    @if (description()) {
+      <p class="mt-1.5 max-w-2xl text-sm leading-6 text-ink-muted">{{ description() }}</p>
+    }
+  </div>
+  <ng-content select="[actions]" />
+</header>

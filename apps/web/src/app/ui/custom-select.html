@@ -1,0 +1,73 @@
+<div class="relative min-w-0">
+  <button
+    class="select-trigger flex min-h-11 w-full items-center justify-between gap-2 rounded-ui border border-stroke bg-panel-raised px-3.5 text-left text-sm text-ink transition hover:border-brand/40 focus:border-brand/60 focus:ring-3 focus:ring-brand/10 disabled:opacity-45"
+    type="button"
+    [disabled]="disabled()"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="listbox"
+    #trigger
+    (click)="toggle()"
+  >
+    <span class="truncate">{{ selectedLabel() }}</span>
+    <i
+      class="text-ink-muted not-italic transition-transform"
+      [class.rotate-180]="open()"
+      aria-hidden="true"
+      >⌄</i
+    >
+  </button>
+  @if (open()) {
+    <div
+      class="select-menu absolute z-[9200] overflow-hidden rounded-ui border border-stroke bg-panel p-1.5 text-ink shadow-float"
+      role="listbox"
+      phAppendToBody
+      [phAppendToBodyAnchor]="trigger"
+      phAppendToBodyAlign="start"
+      [phAppendToBodyMatchWidth]="true"
+      [phAppendToBodyGap]="6"
+    >
+      @if (filterable()) {
+        <label class="mb-1.5 block border-b border-stroke p-1 pb-2">
+          <span class="sr-only">Filtra opzioni</span>
+          <input
+            class="min-h-9 w-full rounded-lg border border-stroke bg-panel-raised px-3 text-sm text-ink outline-none placeholder:text-ink-muted focus:border-brand/60"
+            type="search"
+            placeholder="Filtra opzioni…"
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+          />
+        </label>
+      }
+      <div class="max-h-64 overflow-auto">
+        @for (option of filteredOptions(); track option.value) {
+          <button
+            [class]="
+              option.value === value()
+                ? 'flex min-h-11 w-full items-center justify-between gap-2 rounded-lg bg-brand/10 px-3 py-2 text-left transition hover:bg-brand/10'
+                : 'flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition hover:bg-brand/10'
+            "
+            type="button"
+            role="option"
+            [attr.aria-selected]="option.value === value()"
+            (click)="choose(option.value)"
+          >
+            <span class="min-w-0">
+              <strong class="block truncate text-sm">{{ option.label }}</strong>
+              @if (option.description) {
+                <small class="mt-0.5 block truncate text-xs text-ink-muted">{{
+                  option.description
+                }}</small>
+              }
+            </span>
+            @if (option.value === value()) {
+              <b class="text-brand" aria-hidden="true">✓</b>
+            }
+          </button>
+        } @empty {
+          <p class="m-0 px-3 py-5 text-center text-sm text-ink-muted">Nessuna opzione.</p>
+        }
+      </div>
+    </div>
+  }
+</div>
