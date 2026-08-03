@@ -43,6 +43,18 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth-page').then((module) => module.AuthPage),
   },
   {
+    path: 'reimposta-password',
+    title: 'Reimposta password · PortfolioHub',
+    data: { mode: 'reset' },
+    loadComponent: () => import('./pages/auth-page').then((module) => module.AuthPage),
+  },
+  {
+    path: 'collab/:token',
+    title: 'Invito collaborazione · PortfolioHub',
+    loadComponent: () =>
+      import('./pages/collaboration-invite').then((module) => module.CollaborationInvitePage),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./shell/app-shell').then((module) => module.AppShell),

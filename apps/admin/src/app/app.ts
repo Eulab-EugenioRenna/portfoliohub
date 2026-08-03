@@ -567,6 +567,15 @@ export class App implements OnDestroy {
     }[status];
   }
 
+  accountStatusLabel(status: Account['status']): string {
+    return {
+      pending: 'In attesa',
+      active: 'Attivo',
+      suspended: 'Sospeso',
+      deleting: 'In eliminazione',
+    }[status];
+  }
+
   private restore(): void {
     this.http.get<Staff>('/api/v1/admin/auth/me').subscribe({
       next: (staff) => {

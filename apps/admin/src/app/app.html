@@ -460,7 +460,7 @@
                         </td>
                         <td>
                           <span class="status" [class.danger]="account.status !== 'active'"
-                            ><i></i>{{ account.status }}</span
+                            ><i></i>{{ accountStatusLabel(account.status) }}</span
                           >
                         </td>
                         <td>
@@ -846,76 +846,144 @@
         phAppendToBody
       ></div>
       <aside
-        class="fixed top-1/2 left-1/2 z-[8001] max-h-[calc(100dvh-2rem)] w-[min(720px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-shell border border-stroke bg-panel p-6 text-ink shadow-float [&_.close]:absolute [&_.close]:top-5 [&_.close]:right-5 [&_.close]:grid [&_.close]:size-10 [&_.close]:place-items-center [&_.close]:rounded-ui [&_.close]:border [&_.close]:border-stroke [&_.close]:bg-panel-raised [&_label]:mt-5 [&_label]:grid [&_label]:gap-2 [&_label]:text-sm [&_label]:font-bold [&_textarea]:rounded-ui [&_textarea]:border [&_textarea]:border-stroke [&_textarea]:bg-panel-raised [&_textarea]:p-3 [&_textarea]:text-ink [&_.actions]:mt-6 [&_.actions]:grid [&_.actions]:gap-3 [&_.action-choice]:rounded-ui [&_.action-choice]:border [&_.action-choice]:border-stroke [&_.action-choice]:bg-panel-raised [&_.action-choice]:p-4 [&_.manual-plan-card]:mt-4 [&_.manual-plan-card]:grid [&_.manual-plan-card]:gap-4 [&_.manual-plan-card]:rounded-card [&_.manual-plan-card]:border [&_.manual-plan-card]:border-brand/30 [&_.manual-plan-card]:bg-brand/5 [&_.manual-plan-card]:p-5"
+        class="fixed top-1/2 left-1/2 z-[8001] max-h-[calc(100dvh-2rem)] w-[min(720px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-shell border border-stroke bg-panel p-5 text-ink shadow-float sm:p-7"
         aria-modal="true"
         role="dialog"
         aria-labelledby="manage-account-title"
         phAppendToBody
       >
-        <button class="close" (click)="selectedAccount.set(null)" aria-label="Chiudi">×</button>
-        <p class="eyebrow">ACCOUNT CONTROL</p>
-        <h2 id="manage-account-title">{{ account.displayName }}</h2>
-        <p class="account-identity">{{ account.email }} · {{ account.status }}</p>
-        <div class="account-facts">
-          <div>
-            <small>Verifica email</small
-            ><strong>{{ account.emailVerifiedAt ? 'Completata' : 'In attesa' }}</strong>
+        <button
+          class="absolute top-5 right-5 grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted transition hover:border-brand/40 hover:text-ink"
+          type="button"
+          (click)="selectedAccount.set(null)"
+          aria-label="Chiudi"
+        >
+          ×
+        </button>
+        <p class="eyebrow">CONTROLLO ACCOUNT</p>
+        <div class="mt-4 flex flex-col gap-4 pr-12 sm:flex-row sm:items-start">
+          <span
+            class="grid size-12 shrink-0 place-items-center rounded-xl bg-brand/12 text-sm font-black text-brand"
+            aria-hidden="true"
+            >{{ account.displayName.slice(0, 2).toUpperCase() }}</span
+          >
+          <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-extrabold tracking-[-.035em]" id="manage-account-title">
+              {{ account.displayName }}
+            </h2>
+            <p class="mt-1 truncate text-sm text-ink-muted">{{ account.email }}</p>
           </div>
-          <div>
-            <small>Creato</small><strong>{{ account.createdAt | date: 'd MMM y' }}</strong>
+          <span
+            class="inline-flex w-fit shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-black"
+            [class.bg-positive/10]="account.status === 'active'"
+            [class.text-positive]="account.status === 'active'"
+            [class.bg-caution/10]="account.status === 'pending'"
+            [class.text-caution]="account.status === 'pending'"
+            [class.bg-negative/10]="account.status === 'suspended' || account.status === 'deleting'"
+            [class.text-negative]="account.status === 'suspended' || account.status === 'deleting'"
+          >
+            <i class="size-1.5 rounded-full bg-current"></i>{{ accountStatusLabel(account.status) }}
+          </span>
+        </div>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-ui border border-stroke bg-panel-raised p-4">
+            <small class="block text-[10px] font-black tracking-[.12em] text-ink-muted uppercase"
+              >Verifica email</small
+            >
+            <strong
+              class="mt-2 flex items-center gap-2 text-sm"
+              [class.text-positive]="account.emailVerifiedAt"
+              [class.text-caution]="!account.emailVerifiedAt"
+              ><i class="size-2 rounded-full bg-current"></i>{{
+                account.emailVerifiedAt ? 'Completata' : 'In attesa'
+              }}</strong
+            >
+          </div>
+          <div class="rounded-ui border border-stroke bg-panel-raised p-4">
+            <small class="block text-[10px] font-black tracking-[.12em] text-ink-muted uppercase"
+              >Creato</small
+            >
+            <strong class="mt-2 block text-sm text-ink">{{
+              account.createdAt | date: 'd MMM y'
+            }}</strong>
           </div>
         </div>
         @if (staff()!.role === 'admin') {
-          <label
-            >Motivazione<textarea
+          <label class="mt-6 grid gap-2 text-sm font-bold"
+            >Motivazione obbligatoria<textarea
+              class="min-h-28 w-full resize-y rounded-ui border border-stroke bg-panel-raised p-3 text-sm leading-6 text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
               [(ngModel)]="accountReason"
               rows="4"
               placeholder="Indica richiesta, autorizzazione o motivo commerciale (minimo 20 caratteri)"
             ></textarea>
+            <small class="font-normal text-ink-muted"
+              >La motivazione viene registrata nell’audit staff.</small
+            >
           </label>
-          <div class="actions account-actions">
-            <div class="action-choice">
-              <div>
-                <strong>Verifica manualmente</strong
-                ><small
+          <div class="mt-6 grid gap-4">
+            <section
+              class="flex flex-col gap-4 rounded-card border border-stroke bg-panel-raised p-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="min-w-0">
+                <span class="text-[10px] font-black tracking-[.12em] text-brand uppercase"
+                  >Identità</span
+                >
+                <strong class="mt-2 block text-sm">Verifica manualmente</strong>
+                <small class="mt-1 block max-w-md text-xs leading-5 text-ink-muted"
                   >Attiva l’account senza richiedere il click sul link ricevuto via email.</small
                 >
               </div>
-              <button (click)="verifyAccount()" [disabled]="!!account.emailVerifiedAt">
+              <button
+                class="min-h-10 shrink-0 rounded-ui border-0 bg-brand px-4 text-xs font-bold text-white transition hover:bg-brand-deep disabled:cursor-not-allowed disabled:bg-panel-strong disabled:text-ink-muted"
+                type="button"
+                (click)="verifyAccount()"
+                [disabled]="!!account.emailVerifiedAt"
+              >
                 {{ account.emailVerifiedAt ? 'Verificato' : 'Verifica' }}
               </button>
-            </div>
-            <div class="manual-plan-card">
+            </section>
+            <section class="grid gap-4 rounded-card border border-brand/30 bg-brand/5 p-5">
               <div>
-                <strong>Assegna piano senza pagamento</strong>
-                <small
+                <span class="text-[10px] font-black tracking-[.12em] text-brand uppercase"
+                  >Billing manuale</span
+                >
+                <strong class="mt-2 block text-sm">Assegna piano senza pagamento</strong>
+                <small class="mt-1 block text-xs leading-5 text-ink-muted"
                   >Crea un entitlement manuale senza Checkout Stripe. L’operazione è immediata e
                   sottoposta ad audit.</small
                 >
               </div>
               @if (account.workspaces.length) {
-                <label
-                  >Workspace<ph-select
-                    [(ngModel)]="accountWorkspaceId"
-                    [options]="workspaceOptions(account)"
-                    ariaLabel="Workspace da aggiornare"
-                    placeholder="Seleziona workspace"
-                /></label>
-                <label
-                  >Nuovo piano<ph-select
-                    [(ngModel)]="accountPlan"
-                    [options]="planOptions"
-                    ariaLabel="Nuovo piano"
-                    placeholder="Seleziona piano"
-                /></label>
-                <button type="button" (click)="assignAccountPlan()">Assegna piano manuale</button>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <label class="grid gap-2 text-sm font-bold"
+                    >Workspace<ph-select
+                      [(ngModel)]="accountWorkspaceId"
+                      [options]="workspaceOptions(account)"
+                      ariaLabel="Workspace da aggiornare"
+                      placeholder="Seleziona workspace"
+                  /></label>
+                  <label class="grid gap-2 text-sm font-bold"
+                    >Nuovo piano<ph-select
+                      [(ngModel)]="accountPlan"
+                      [options]="planOptions"
+                      ariaLabel="Nuovo piano"
+                      placeholder="Seleziona piano"
+                  /></label>
+                </div>
+                <button
+                  class="min-h-11 justify-self-start rounded-ui border-0 bg-brand px-4 text-xs font-bold text-white transition hover:bg-brand-deep"
+                  type="button"
+                  (click)="assignAccountPlan()"
+                >
+                  Assegna piano manuale
+                </button>
               } @else {
-                <p>Nessun workspace di proprietà disponibile.</p>
+                <p class="text-sm text-ink-muted">Nessun workspace di proprietà disponibile.</p>
               }
-            </div>
+            </section>
           </div>
         } @else {
-          <p class="permission-note">
+          <p class="mt-6 rounded-ui border border-stroke bg-panel-raised p-4 text-sm text-ink-muted">
             Solo il ruolo Admin può verificare account e assegnare piani.
           </p>
         }

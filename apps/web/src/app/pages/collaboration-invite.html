@@ -1,0 +1,73 @@
+<main class="grid min-h-dvh place-items-center bg-canvas p-5 sm:p-10">
+  <section
+    class="relative w-full max-w-[620px] overflow-hidden rounded-shell border border-stroke bg-panel p-7 shadow-float sm:p-12"
+  >
+    <div
+      class="pointer-events-none absolute -top-36 -right-36 size-80 rounded-full bg-brand/15 blur-3xl"
+    ></div>
+    <a class="relative inline-flex items-center gap-3 text-ink no-underline" routerLink="/">
+      <span
+        class="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep text-lg font-black text-white"
+        >P</span
+      >
+      <strong class="font-display text-lg">PortfolioHub</strong>
+    </a>
+
+    @if (loading()) {
+      <div class="relative mt-14 grid gap-3" aria-live="polite">
+        <div class="h-3 w-28 animate-pulse rounded bg-panel-strong"></div>
+        <div class="h-10 w-4/5 animate-pulse rounded bg-panel-strong"></div>
+        <div class="h-20 animate-pulse rounded bg-panel-strong"></div>
+      </div>
+    } @else if (invite(); as current) {
+      <div class="relative mt-14">
+        <span class="text-xs font-black tracking-[0.16em] text-brand uppercase"
+          >Invito collaborazione</span
+        >
+        <h1 class="mt-4 font-display text-4xl leading-tight tracking-[-0.045em] text-ink sm:text-5xl">
+          Entra in {{ current.workspaceName }}.
+        </h1>
+        <p class="mt-5 text-base leading-8 text-ink-muted">
+          L’invito è destinato a <strong class="text-ink">{{ current.emailHint }}</strong> con il
+          ruolo di <strong class="text-ink">{{ current.role }}</strong>.
+        </p>
+        <div class="mt-8 rounded-card border border-stroke bg-panel-raised p-5">
+          <span class="block text-[10px] font-black tracking-[.14em] text-ink-muted uppercase"
+            >Validità</span
+          >
+          <strong class="mt-2 block text-sm text-ink"
+            >Fino al {{ current.expiresAt | date: 'd MMMM y, HH:mm' }}</strong
+          >
+        </div>
+        @if (error()) {
+          <div class="mt-5 rounded-ui border border-negative/30 bg-negative/8 p-4 text-sm text-negative" role="alert">
+            {{ error() }}
+          </div>
+        }
+        <button
+          class="mt-7 min-h-12 w-full rounded-ui border-0 bg-gradient-to-br from-brand-deep to-brand px-5 text-sm font-extrabold text-white shadow-[0_12px_30px_rgba(30,92,219,.28)] transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
+          type="button"
+          [disabled]="accepting()"
+          (click)="accept()"
+        >
+          {{ accepting() ? 'Verifica accesso…' : 'Accetta e continua' }}
+        </button>
+      </div>
+    } @else {
+      <div class="relative mt-14">
+        <span class="text-xs font-black tracking-[0.16em] text-negative uppercase"
+          >Invito non disponibile</span
+        >
+        <h1 class="mt-4 font-display text-4xl tracking-[-0.045em] text-ink">
+          Questo collegamento non è più valido.
+        </h1>
+        <p class="mt-5 text-sm leading-7 text-ink-muted">{{ error() }}</p>
+        <a
+          class="mt-7 inline-flex min-h-12 items-center justify-center rounded-ui border border-stroke px-5 text-sm font-bold text-ink no-underline"
+          routerLink="/accedi"
+          >Vai all’accesso</a
+        >
+      </div>
+    }
+  </section>
+</main>

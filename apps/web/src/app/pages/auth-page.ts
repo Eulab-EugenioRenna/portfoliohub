@@ -1,9 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../core/auth.store';
 
-type AuthMode = 'login' | 'signup' | 'verify';
+type AuthMode = 'login' | 'signup' | 'verify' | 'reset';
 interface LoginSession {
   id: string;
   userAgent: string | null;
@@ -18,7 +25,7 @@ interface LoginSession {
   templateUrl: './auth-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuthPage {
+export class AuthPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthStore);
@@ -33,6 +40,12 @@ export class AuthPage {
   protected workspaceName = '';
   protected workspaceType: 'freelance' | 'studio' = 'freelance';
   protected token = this.route.snapshot.queryParamMap.get('token') ?? '';
+
+  ngOnInit(): void {
+    const magicToken = this.route.snapshot.queryParamMap.get('magic');
+    if (this.mode() === 'login' && magicToken) void this.consumeMagicLink(magicToken);
+    if (this.mode() === 'verify' && this.token) void this.submit();
+  }
 
   protected async submit(): Promise<void> {
     this.error.set(null);
@@ -52,9 +65,12 @@ export class AuthPage {
           workspaceType: this.workspaceType,
         });
         this.pendingVerification.set(true);
-      } else {
+      } else if (this.mode() === 'verify') {
         await this.auth.verify(this.token);
         await this.router.navigateByUrl('/panoramica');
+      } else {
+        await this.auth.resetPassword(this.token, this.password);
+        await this.router.navigateByUrl('/accedi');
       }
     } catch (error) {
       const response = error as {
@@ -71,6 +87,19 @@ export class AuthPage {
       this.error.set(
         Array.isArray(message) ? message.join(' · ') : (message ?? 'Operazione non riuscita'),
       );
+    }
+  }
+
+  private async consumeMagicLink(token: string): Promise<void> {
+    this.error.set(null);
+    try {
+      await this.auth.consumeMagicLink(token);
+      await this.router.navigateByUrl(
+        this.route.snapshot.queryParamMap.get('returnUrl') ?? '/panoramica',
+      );
+    } catch (error) {
+      const response = error as { error?: { message?: string } };
+      this.error.set(response.error?.message ?? 'Il link di accesso non è valido o è scaduto.');
     }
   }
 

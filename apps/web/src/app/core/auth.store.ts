@@ -64,6 +64,30 @@ export class AuthStore {
     );
   }
 
+  async consumeMagicLink(token: string): Promise<void> {
+    this.loading.set(true);
+    try {
+      this.principal.set(
+        await firstValueFrom(
+          this.http.post<Principal>('/api/v1/auth/magic-link/consume', { token }),
+        ),
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    this.loading.set(true);
+    try {
+      await firstValueFrom(
+        this.http.post<void>('/api/v1/auth/password-reset/complete', { token, password }),
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   async logout(): Promise<void> {
     await firstValueFrom(this.http.post('/api/v1/auth/logout', {}));
     this.principal.set(null);

@@ -66,7 +66,9 @@
             ? 'Bentornato'
             : mode() === 'signup'
               ? 'Inizia ora'
-              : 'Verifica identità'
+              : mode() === 'verify'
+                ? 'Verifica identità'
+                : 'Sicurezza account'
         }}</span>
         <h2 class="mt-3 text-3xl font-extrabold tracking-[-0.04em] sm:text-4xl">
           {{
@@ -74,7 +76,9 @@
               ? 'Accedi al workspace'
               : mode() === 'signup'
                 ? 'Crea il tuo spazio'
-                : 'Conferma la tua email'
+                : mode() === 'verify'
+                  ? 'Conferma la tua email'
+                  : 'Crea una nuova password'
           }}
         </h2>
         <p class="mt-3 text-sm leading-7 text-ink-muted">
@@ -83,7 +87,9 @@
               ? 'Riprendi progetti e consegne dal punto esatto in cui li hai lasciati.'
               : mode() === 'signup'
                 ? 'Un progetto gratuito, fino a 50 GB. Puoi cambiare piano quando serve.'
-                : 'Il token può essere usato una sola volta.'
+                : mode() === 'verify'
+                  ? 'Il collegamento può essere usato una sola volta.'
+                  : 'Scegli una password di almeno 12 caratteri che non usi altrove.'
           }}
         </p>
         <form class="mt-8 grid gap-5" (submit)="$event.preventDefault(); submit()">
@@ -139,7 +145,7 @@
               </button>
             </div>
           }
-          @if (mode() !== 'verify') {
+          @if (mode() === 'login' || mode() === 'signup') {
             <label class="grid gap-2 text-sm font-bold text-ink"
               >Email<input
                 class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
@@ -150,8 +156,10 @@
                 autocomplete="email"
                 required
             /></label>
+          }
+          @if (mode() === 'login' || mode() === 'signup' || mode() === 'reset') {
             <label class="grid gap-2 text-sm font-bold text-ink"
-              >Password<input
+              >{{ mode() === 'reset' ? 'Nuova password' : 'Password' }}<input
                 class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
                 name="password"
                 type="password"
@@ -161,7 +169,8 @@
                 required
                 minlength="12"
             /></label>
-          } @else {
+          }
+          @if (mode() === 'verify') {
             <label class="grid gap-2 text-sm font-bold text-ink"
               >Token di verifica<input
                 class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
@@ -218,7 +227,9 @@
                   ? 'Accedi'
                   : mode() === 'signup'
                     ? 'Crea account'
-                    : 'Verifica e accedi'
+                    : mode() === 'verify'
+                      ? 'Verifica e accedi'
+                      : 'Salva nuova password'
             }}
           </button>
         </form>
