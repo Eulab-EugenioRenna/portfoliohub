@@ -4,9 +4,31 @@
       class="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep text-xs font-black text-white no-underline"
       href="/"
       >PH</a
-    ><span class="text-sm font-bold text-ink-muted">Documenti legali</span>
+    >
+    <nav class="flex items-center gap-2 text-sm font-bold" aria-label="Documenti legali">
+      <a
+        class="rounded-full px-3 py-2 text-ink-muted no-underline hover:bg-panel-raised hover:text-ink"
+        routerLink="/legal/terms"
+        >Termini</a
+      >
+      <a
+        class="rounded-full px-3 py-2 text-ink-muted no-underline hover:bg-panel-raised hover:text-ink"
+        routerLink="/legal/privacy"
+        >Privacy</a
+      >
+    </nav>
   </header>
-  @if (policy(); as document) {
+  @if (loading()) {
+    <section class="mx-auto grid min-h-80 max-w-4xl place-items-center text-sm text-ink-muted">
+      Caricamento documento…
+    </section>
+  } @else if (error()) {
+    <section class="mx-auto max-w-4xl py-20">
+      <div class="rounded-card border border-negative/30 bg-negative/8 p-6 text-negative">
+        {{ error() }}
+      </div>
+    </section>
+  } @else if (policy(); as document) {
     <article class="mx-auto max-w-4xl py-14 sm:py-20">
       <span class="text-xs font-black tracking-[0.16em] text-brand uppercase">{{
         document.kind
@@ -28,13 +50,40 @@
         </section>
       }
       @if (document.status === 'draft-not-published') {
-        <div
-          class="mt-10 rounded-card border border-caution/30 bg-caution/8 p-5 text-sm leading-7 text-caution"
-        >
-          Il testo revisionato non è ancora stato pubblicato. Questa installazione non deve essere
-          aperta al pubblico prima dell’approvazione legale.
+        <p class="mt-4 max-w-2xl text-base leading-8 text-ink-muted">{{ plan().summary }}</p>
+        <div class="mt-10 rounded-card border border-caution/30 bg-caution/8 p-5">
+          <strong class="text-sm text-caution">Documento in revisione legale</strong>
+          <p class="mt-2 text-sm leading-7 text-ink-muted">
+            Questa pagina mostra la struttura prevista, non costituisce ancora il testo legale in
+            vigore. La pubblicazione richiede revisione e approvazione professionale.
+          </p>
         </div>
+        <section class="mt-10 border-t border-stroke pt-8">
+          <span class="text-xs font-black tracking-[.14em] text-brand uppercase"
+            >Struttura prevista</span
+          >
+          <h2 class="mt-3 text-2xl font-extrabold">{{ plan().title }}</h2>
+          <ol class="mt-6 grid gap-3">
+            @for (section of plan().sections; track section; let index = $index) {
+              <li
+                class="grid grid-cols-[36px_1fr] items-center gap-3 rounded-ui border border-stroke bg-panel p-4"
+              >
+                <span
+                  class="grid size-9 place-items-center rounded-lg bg-brand/10 text-xs font-black text-brand"
+                  >0{{ index + 1 }}</span
+                >
+                <strong class="text-sm">{{ section }}</strong>
+              </li>
+            }
+          </ol>
+        </section>
       }
     </article>
   }
+  <footer
+    class="mx-auto flex max-w-4xl flex-wrap justify-between gap-3 border-t border-stroke py-8 text-xs text-ink-muted"
+  >
+    <span>PortfolioHub · Centro legale</span>
+    <span>Versioni pubblicate e archiviate senza modifiche retroattive</span>
+  </footer>
 </main>

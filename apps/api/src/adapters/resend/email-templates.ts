@@ -129,6 +129,30 @@ export function renderEmail(message: EmailMessage, appOrigin: string): RenderedE
         note: 'Puoi rispondere direttamente dalla conversazione nel tuo workspace.',
       };
       break;
+    case 'support.ticket.opened_confirmation':
+      content = {
+        subject: `Richiesta ricevuta · ${value('subject') || 'Ticket aperto'}`,
+        preheader: 'Il supporto PortfolioHub ha ricevuto la tua richiesta.',
+        eyebrow: 'Supporto PortfolioHub',
+        heading: 'Il tuo ticket è aperto.',
+        intro: value('subject') || 'Abbiamo ricevuto la tua richiesta.',
+        body: value('message'),
+        action: { label: 'Apri la conversazione', url: url(value('actionUrl') || '/ticket') },
+        note: 'Ti invieremo una nuova email quando il supporto risponde o cambia lo stato.',
+      };
+      break;
+    case 'support.ticket.status_changed':
+      content = {
+        subject: `Ticket ${value('status') || 'aggiornato'} · ${value('subject') || 'La tua richiesta'}`,
+        preheader: 'Lo stato della tua richiesta di supporto è cambiato.',
+        eyebrow: 'Supporto PortfolioHub',
+        heading: `Ticket ${value('status') || 'aggiornato'}.`,
+        intro: value('subject') || 'Il team di supporto ha aggiornato la tua richiesta.',
+        body: value('message'),
+        action: { label: 'Apri la conversazione', url: url(value('actionUrl') || '/ticket') },
+        note: 'Dalla conversazione puoi leggere lo storico completo e rispondere al supporto.',
+      };
+      break;
     case 'workspace.product':
       content = workspaceMessage('Novità PortfolioHub', 'Aggiornamento prodotto', message, origin);
       break;

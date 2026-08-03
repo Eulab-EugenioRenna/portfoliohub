@@ -91,6 +91,12 @@ export class SupportTicketsService {
       body: ticket.description,
       eventId: `opened:${ticket.id}`,
     });
+    await this.notifications.notifyTicketOpened({
+      userId,
+      ticketId: ticket.id,
+      workspaceId,
+      subject: ticket.subject,
+    });
     return ticket;
   }
 
@@ -101,11 +107,23 @@ export class SupportTicketsService {
   async updateForStaff(id: string, dto: UpdateSupportTicketDto): Promise<SupportTicketEntity> {
     const ticket = await this.tickets.findOneBy({ id });
     if (!ticket) throw new NotFoundException('Ticket non trovato');
+    const previousStatus = ticket.status;
     ticket.status = dto.status;
     ticket.priority = dto.priority;
     ticket.updatedAt = new Date();
     ticket.resolvedAt = ['resolved', 'closed'].includes(dto.status) ? new Date() : null;
-    return this.tickets.save(ticket);
+    const updated = await this.tickets.save(ticket);
+    if (previousStatus !== updated.status && updated.openedByUserId) {
+      await this.notifications.notifyTicketStatus({
+        userId: updated.openedByUserId,
+        ticketId: updated.id,
+        workspaceId: updated.workspaceId,
+        subject: updated.subject,
+        status: this.statusLabel(updated.status),
+        eventId: `status:${updated.status}:${updated.updatedAt.toISOString()}`,
+      });
+    }
+    return updated;
   }
 
   async listMessagesForUser(workspaceId: string, userId: string, ticketId: string) {
@@ -234,5 +252,17 @@ export class SupportTicketsService {
   private async assertMembership(workspaceId: string, userId: string): Promise<void> {
     if (!(await this.memberships.existsBy({ workspaceId, userId, status: 'active' })))
       throw new ForbiddenException('Accesso al workspace negato');
+  }
+
+  private statusLabel(status: SupportTicketEntity['status']): string {
+    return (
+      {
+        open: 'Aperto',
+        in_progress: 'In lavorazione',
+        waiting_user: 'In attesa di una tua risposta',
+        resolved: 'Risolto',
+        closed: 'Chiuso',
+      } satisfies Record<SupportTicketEntity['status'], string>
+    )[status];
   }
 }

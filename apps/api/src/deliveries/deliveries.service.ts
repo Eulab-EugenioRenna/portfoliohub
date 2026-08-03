@@ -228,14 +228,26 @@ export class DeliveriesService {
     passwordRequired: boolean;
     oneShot: boolean;
     expiresAt: Date | null;
+    createdAt: Date;
+    itemCount: number;
+    roots: Array<{ name: string; kind: 'file' | 'folder' }>;
   }> {
     const delivery = await this.findPublic(token);
     await this.assertWorkspaceOperational(delivery.workspaceId);
+    const content = await this.content(delivery.id);
     return {
       title: delivery.title,
       passwordRequired: Boolean(delivery.passwordHash),
       oneShot: delivery.oneShot,
       expiresAt: delivery.expiresAt,
+      createdAt: delivery.createdAt,
+      itemCount: content.length,
+      roots: content
+        .filter((item) => !item.path.includes('/'))
+        .map((item) => ({
+          name: item.path,
+          kind: item.kind === 'folder' ? 'folder' : 'file',
+        })),
     };
   }
 

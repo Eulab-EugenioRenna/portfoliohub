@@ -17,7 +17,7 @@ describe('CustomSelect body overlay', () => {
     const panel = document.body.querySelector('.select-menu');
     expect(panel).toBeTruthy();
     expect(panel?.parentElement).toBe(document.body);
-    expect(panel?.classList.contains('z-[9200]')).toBe(true);
+    expect(panel?.classList.contains('z-[10000]')).toBe(true);
     expect(panel?.textContent).toContain('Attivo');
     fixture.destroy();
   });

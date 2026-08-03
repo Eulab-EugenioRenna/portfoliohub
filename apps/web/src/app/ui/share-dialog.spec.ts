@@ -55,6 +55,22 @@ describe('ShareDialog', () => {
     expect(downloads?.disabled).toBe(false);
   });
 
+  it('keeps select options above the modal and immediately interactive', () => {
+    const fixture = createDialog();
+    const trigger = document.body.querySelector(
+      '[aria-labelledby="share-title"] .select-trigger',
+    ) as HTMLButtonElement | null;
+
+    trigger?.click();
+    fixture.detectChanges();
+
+    const panel = document.body.querySelector<HTMLElement>('.select-menu');
+    expect(panel?.classList.contains('z-[10000]')).toBe(true);
+    panel?.querySelector<HTMLButtonElement>('[role="option"]')?.click();
+    fixture.detectChanges();
+    expect(document.body.querySelector('.select-menu')).toBeNull();
+  });
+
   it('stays open on the success state after creating a link', async () => {
     const fixture = createDialog();
     const http = TestBed.inject(HttpTestingController);

@@ -92,6 +92,26 @@
                   : 'Scegli una password di almeno 12 caratteri che non usi altrove.'
           }}
         </p>
+        @if (mode() === 'signup') {
+          <aside
+            class="mt-6 rounded-card border border-brand/25 bg-brand/8 p-4"
+            aria-label="Prova gratuita Pro"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand text-xs font-black text-white"
+                >30</span
+              >
+              <div>
+                <strong class="block text-sm text-ink">30 giorni di Pro inclusi</strong>
+                <p class="mt-1 text-xs leading-5 text-ink-muted">
+                  Nessuna carta richiesta. Alla scadenza passi automaticamente al piano Free e i
+                  tuoi dati non vengono cancellati.
+                </p>
+              </div>
+            </div>
+          </aside>
+        }
         <form class="mt-8 grid gap-5" (submit)="$event.preventDefault(); submit()">
           @if (mode() === 'signup') {
             <label class="grid gap-2 text-sm font-bold text-ink"
@@ -159,7 +179,8 @@
           }
           @if (mode() === 'login' || mode() === 'signup' || mode() === 'reset') {
             <label class="grid gap-2 text-sm font-bold text-ink"
-              >{{ mode() === 'reset' ? 'Nuova password' : 'Password' }}<input
+              >{{ mode() === 'reset' ? 'Nuova password' : 'Password'
+              }}<input
                 class="min-h-12 rounded-ui border border-stroke bg-panel-raised px-4 text-sm text-ink outline-none transition focus:border-brand focus:ring-3 focus:ring-brand/10"
                 name="password"
                 type="password"
@@ -232,6 +253,14 @@
                       : 'Salva nuova password'
             }}
           </button>
+          @if (mode() === 'signup') {
+            <p class="m-0 text-center text-xs leading-5 text-ink-muted">
+              Prima di creare l’account consulta i
+              <a class="font-bold text-brand" routerLink="/legal/terms">Termini</a>
+              e la
+              <a class="font-bold text-brand" routerLink="/legal/privacy">Privacy Policy</a>.
+            </p>
+          }
         </form>
         <footer class="mt-7 border-t border-stroke pt-6 text-center text-sm text-ink-muted">
           @if (mode() === 'login') {

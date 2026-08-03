@@ -10,6 +10,9 @@ interface DeliveryInfo {
   passwordRequired: boolean;
   oneShot: boolean;
   expiresAt: string | null;
+  createdAt: string;
+  itemCount: number;
+  roots: Array<{ name: string; kind: 'file' | 'folder' }>;
 }
 interface DeliveryItem {
   nodeId: string;
@@ -170,6 +173,12 @@ export class PublicDeliveryPage {
     return value >= 1024 ** 3
       ? `${(value / 1024 ** 3).toFixed(1)} GB`
       : `${Math.ceil(value / 1024 ** 2)} MB`;
+  }
+
+  protected rootSummary(delivery: DeliveryInfo): string {
+    if (delivery.roots.length === 0) return 'Contenuto selezionato';
+    if (delivery.roots.length === 1) return delivery.roots[0].name;
+    return `${delivery.roots[0].name} e altri ${delivery.roots.length - 1}`;
   }
 
   private async load(): Promise<void> {

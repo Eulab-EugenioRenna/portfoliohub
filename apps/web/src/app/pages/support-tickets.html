@@ -129,191 +129,203 @@
 </section>
 
 @if (createTicketOpen()) {
-  <button
-    class="fixed inset-0 z-[8000] border-0 bg-slate-950/80 backdrop-blur-md"
-    type="button"
-    (click)="closeCreateTicket()"
-    aria-label="Chiudi nuova richiesta"
+  <div
+    class="fixed inset-0 z-[8000] grid place-items-center p-4"
+    role="presentation"
     phAppendToBody
-  ></button>
-  <form
-    class="create-ticket-modal fixed top-1/2 left-1/2 z-[8001] flex max-h-[calc(100dvh-2rem)] w-[min(820px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 animate-rise flex-col overflow-hidden rounded-shell border border-stroke bg-panel shadow-float"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="new-ticket-title"
-    phAppendToBody
-    (submit)="submit($event)"
   >
-    <header class="flex items-start justify-between gap-5 border-b border-stroke p-5 sm:p-6">
-      <div>
-        <span class="text-[10px] font-black tracking-[.16em] text-brand">NUOVA RICHIESTA</span>
-        <h2 class="mt-2 text-2xl font-extrabold" id="new-ticket-title">Apri un ticket</h2>
-        <p class="mt-1 text-sm text-ink-muted">Non inserire password, token o dati di pagamento.</p>
-      </div>
-      <button
-        class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
-        type="button"
-        (click)="closeCreateTicket()"
-        aria-label="Chiudi"
-      >
-        ×
-      </button>
-    </header>
-    <div
-      class="grid gap-5 overflow-y-auto p-5 sm:p-6 [&_input]:min-h-11 [&_input]:rounded-ui [&_input]:border [&_input]:border-stroke [&_input]:bg-panel-raised [&_input]:px-3.5 [&_input]:text-ink [&_label]:grid [&_label]:gap-2 [&_label]:text-sm [&_label]:font-bold [&_textarea]:rounded-ui [&_textarea]:border [&_textarea]:border-stroke [&_textarea]:bg-panel-raised [&_textarea]:p-3.5 [&_textarea]:text-ink"
+    <button
+      class="absolute inset-0 w-full border-0 bg-slate-950/80"
+      type="button"
+      (click)="closeCreateTicket()"
+      aria-label="Chiudi nuova richiesta"
+    ></button>
+    <form
+      class="create-ticket-modal relative flex max-h-[calc(100dvh-2rem)] w-[min(820px,calc(100vw-2rem))] animate-rise flex-col overflow-hidden rounded-shell border border-stroke bg-panel shadow-float"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-ticket-title"
+      (submit)="submit($event)"
     >
-      <label
-        >Oggetto<input
-          name="subject"
-          type="text"
-          [(ngModel)]="subject"
-          minlength="5"
-          maxlength="160"
-          placeholder="Es. Un upload resta in elaborazione"
-          required
-      /></label>
-      <div class="grid gap-5 sm:grid-cols-2">
-        <label
-          >Area<ph-select
-            name="category"
-            [(ngModel)]="category"
-            [options]="categoryOptions"
-            ariaLabel="Area del ticket"
-            placeholder="Seleziona area"
-        /></label>
-        <label
-          >Priorità<ph-select
-            name="priority"
-            [(ngModel)]="priority"
-            [options]="priorityOptions"
-            ariaLabel="Priorità del ticket"
-            placeholder="Seleziona priorità"
-        /></label>
-      </div>
-      <label
-        >Descrizione<textarea
-          name="description"
-          [(ngModel)]="description"
-          minlength="20"
-          maxlength="5000"
-          rows="8"
-          placeholder="Cosa stavi facendo, cosa è successo e quando. Se disponibile indica il nome del progetto o del file."
-          required
-        ></textarea>
-      </label>
-    </div>
-    <footer
-      class="flex flex-col justify-between gap-4 border-t border-stroke p-5 sm:flex-row sm:items-center sm:px-6"
-    >
-      <small class="text-xs text-ink-muted">Minimo 20 caratteri · massimo 5.000</small>
-      <div class="flex justify-end gap-2">
+      <header class="flex items-start justify-between gap-5 border-b border-stroke p-5 sm:p-6">
+        <div>
+          <span class="text-[10px] font-black tracking-[.16em] text-brand">NUOVA RICHIESTA</span>
+          <h2 class="mt-2 text-2xl font-extrabold" id="new-ticket-title">Apri un ticket</h2>
+          <p class="mt-1 text-sm text-ink-muted">
+            Non inserire password, token o dati di pagamento.
+          </p>
+        </div>
         <button
-          class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+          class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
           type="button"
           (click)="closeCreateTicket()"
+          aria-label="Chiudi"
         >
-          Annulla</button
-        ><button
-          class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white disabled:opacity-50"
-          type="submit"
-          [disabled]="sending()"
-        >
-          {{ sending() ? 'Invio…' : 'Invia al supporto' }}
+          ×
         </button>
+      </header>
+      <div
+        class="grid gap-5 overflow-y-auto p-5 sm:p-6 [&_input]:min-h-11 [&_input]:rounded-ui [&_input]:border [&_input]:border-stroke [&_input]:bg-panel-raised [&_input]:px-3.5 [&_input]:text-ink [&_label]:grid [&_label]:gap-2 [&_label]:text-sm [&_label]:font-bold [&_textarea]:rounded-ui [&_textarea]:border [&_textarea]:border-stroke [&_textarea]:bg-panel-raised [&_textarea]:p-3.5 [&_textarea]:text-ink"
+      >
+        <label
+          >Oggetto<input
+            name="subject"
+            type="text"
+            [(ngModel)]="subject"
+            minlength="5"
+            maxlength="160"
+            placeholder="Es. Un upload resta in elaborazione"
+            required
+        /></label>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <label
+            >Area<ph-select
+              name="category"
+              [(ngModel)]="category"
+              [options]="categoryOptions"
+              ariaLabel="Area del ticket"
+              placeholder="Seleziona area"
+          /></label>
+          <label
+            >Priorità<ph-select
+              name="priority"
+              [(ngModel)]="priority"
+              [options]="priorityOptions"
+              ariaLabel="Priorità del ticket"
+              placeholder="Seleziona priorità"
+          /></label>
+        </div>
+        <label
+          >Descrizione<textarea
+            name="description"
+            [(ngModel)]="description"
+            minlength="20"
+            maxlength="5000"
+            rows="8"
+            placeholder="Cosa stavi facendo, cosa è successo e quando. Se disponibile indica il nome del progetto o del file."
+            required
+          ></textarea>
+        </label>
       </div>
-    </footer>
-  </form>
+      <footer
+        class="flex flex-col justify-between gap-4 border-t border-stroke p-5 sm:flex-row sm:items-center sm:px-6"
+      >
+        <small class="text-xs text-ink-muted">Minimo 20 caratteri · massimo 5.000</small>
+        <div class="flex justify-end gap-2">
+          <button
+            class="min-h-11 rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink"
+            type="button"
+            (click)="closeCreateTicket()"
+          >
+            Annulla</button
+          ><button
+            class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white disabled:opacity-50"
+            type="submit"
+            [disabled]="sending()"
+          >
+            {{ sending() ? 'Invio…' : 'Invia al supporto' }}
+          </button>
+        </div>
+      </footer>
+    </form>
+  </div>
 }
 
 @if (selectedTicket(); as ticket) {
-  <button
-    class="fixed inset-0 z-[8000] border-0 bg-slate-950/80 backdrop-blur-md"
-    type="button"
-    (click)="closeTicket()"
-    aria-label="Chiudi conversazione"
-    phAppendToBody
-  ></button>
-  <aside
-    class="fixed top-1/2 left-1/2 z-[8001] flex h-[min(780px,calc(100dvh-2rem))] w-[min(980px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 animate-rise flex-col overflow-hidden rounded-shell border border-stroke bg-panel shadow-float"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="ticket-thread-title"
+  <div
+    class="fixed inset-0 z-[8000] grid place-items-center p-4"
+    role="presentation"
     phAppendToBody
   >
-    <header class="flex items-start justify-between gap-5 border-b border-stroke p-5 sm:p-6">
-      <div>
-        <span class="text-[10px] font-black tracking-[.16em] text-brand"
-          >CONVERSAZIONE #{{ ticket.id.slice(0, 8) }}</span
-        >
-        <h2 class="mt-2 text-2xl font-extrabold" id="ticket-thread-title">{{ ticket.subject }}</h2>
-        <span
-          class="mt-3 inline-flex rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-[10px] font-black text-brand"
-          [attr.data-status]="ticket.status"
-          >{{ statusLabel(ticket.status) }}</span
-        >
-      </div>
-      <button
-        class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
-        type="button"
-        (click)="closeTicket()"
-        aria-label="Chiudi"
-      >
-        ×
-      </button>
-    </header>
-    <div class="flex-1 space-y-4 overflow-y-auto bg-canvas/40 p-5 sm:p-6" aria-live="polite">
-      @if (conversationLoading()) {
-        <div class="p-10 text-center text-sm text-ink-muted">Caricamento conversazione…</div>
-      } @else {
-        @for (message of messages(); track message.id) {
-          <article
-            class="max-w-[82%] rounded-card border border-stroke bg-panel-raised p-4 [&.from-staff]:ml-auto [&.from-staff]:border-brand/30 [&.from-staff]:bg-brand/8"
-            [class.from-staff]="message.authorType === 'staff'"
-          >
-            <div class="flex items-center justify-between gap-5">
-              <strong class="text-xs">{{
-                message.authorType === 'staff' ? 'Supporto PortfolioHub' : 'Tu'
-              }}</strong>
-              <time class="text-[10px] text-ink-muted">{{
-                message.createdAt | date: 'd MMM, HH:mm'
-              }}</time>
-            </div>
-            <p class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink">{{ message.body }}</p>
-          </article>
-        } @empty {
-          <div class="p-10 text-center text-sm text-ink-muted">Nessun messaggio nel ticket.</div>
-        }
-      }
-    </div>
-    <form
-      class="grid gap-3 border-t border-stroke bg-panel p-5 sm:p-6"
-      (submit)="sendReply($event)"
+    <button
+      class="absolute inset-0 w-full border-0 bg-slate-950/80"
+      type="button"
+      (click)="closeTicket()"
+      aria-label="Chiudi conversazione"
+    ></button>
+    <aside
+      class="relative flex h-[min(780px,calc(100dvh-2rem))] w-[min(980px,calc(100vw-2rem))] animate-rise flex-col overflow-hidden rounded-shell border border-stroke bg-panel shadow-float"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ticket-thread-title"
     >
-      <label class="text-xs font-bold text-ink-muted" for="ticket-reply">Rispondi</label>
-      <textarea
-        id="ticket-reply"
-        name="replyBody"
-        [(ngModel)]="replyBody"
-        class="max-h-36 min-h-24 resize-y rounded-ui border border-stroke bg-panel-raised p-3.5 text-sm text-ink outline-none focus:border-brand"
-        rows="4"
-        maxlength="5000"
-        placeholder="Scrivi un aggiornamento o rispondi al supporto…"
-        [disabled]="ticket.status === 'closed'"
-      ></textarea>
-      <footer class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <small class="text-xs text-ink-muted">{{
-          ticket.status === 'closed'
-            ? 'Il ticket è chiuso.'
-            : 'Aggiornamento in tempo reale via SSE'
-        }}</small>
+      <header class="flex items-start justify-between gap-5 border-b border-stroke p-5 sm:p-6">
+        <div>
+          <span class="text-[10px] font-black tracking-[.16em] text-brand"
+            >CONVERSAZIONE #{{ ticket.id.slice(0, 8) }}</span
+          >
+          <h2 class="mt-2 text-2xl font-extrabold" id="ticket-thread-title">
+            {{ ticket.subject }}
+          </h2>
+          <span
+            class="mt-3 inline-flex rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-[10px] font-black text-brand"
+            [attr.data-status]="ticket.status"
+            >{{ statusLabel(ticket.status) }}</span
+          >
+        </div>
         <button
-          class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white disabled:opacity-50"
-          type="submit"
-          [disabled]="replySending() || ticket.status === 'closed' || !replyBody.trim()"
+          class="grid size-10 place-items-center rounded-ui border border-stroke bg-panel-raised text-xl text-ink-muted"
+          type="button"
+          (click)="closeTicket()"
+          aria-label="Chiudi"
         >
-          {{ replySending() ? 'Invio…' : 'Invia risposta' }}
+          ×
         </button>
-      </footer>
-    </form>
-  </aside>
+      </header>
+      <div class="flex-1 space-y-4 overflow-y-auto bg-canvas/40 p-5 sm:p-6" aria-live="polite">
+        @if (conversationLoading()) {
+          <div class="p-10 text-center text-sm text-ink-muted">Caricamento conversazione…</div>
+        } @else {
+          @for (message of messages(); track message.id) {
+            <article
+              class="max-w-[82%] rounded-card border border-stroke bg-panel-raised p-4 [&.from-staff]:ml-auto [&.from-staff]:border-brand/30 [&.from-staff]:bg-brand/8"
+              [class.from-staff]="message.authorType === 'staff'"
+            >
+              <div class="flex items-center justify-between gap-5">
+                <strong class="text-xs">{{
+                  message.authorType === 'staff' ? 'Supporto PortfolioHub' : 'Tu'
+                }}</strong>
+                <time class="text-[10px] text-ink-muted">{{
+                  message.createdAt | date: 'd MMM, HH:mm'
+                }}</time>
+              </div>
+              <p class="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink">{{ message.body }}</p>
+            </article>
+          } @empty {
+            <div class="p-10 text-center text-sm text-ink-muted">Nessun messaggio nel ticket.</div>
+          }
+        }
+      </div>
+      <form
+        class="grid gap-3 border-t border-stroke bg-panel p-5 sm:p-6"
+        (submit)="sendReply($event)"
+      >
+        <label class="text-xs font-bold text-ink-muted" for="ticket-reply">Rispondi</label>
+        <textarea
+          id="ticket-reply"
+          name="replyBody"
+          [(ngModel)]="replyBody"
+          class="max-h-36 min-h-24 resize-y rounded-ui border border-stroke bg-panel-raised p-3.5 text-sm text-ink outline-none focus:border-brand"
+          rows="4"
+          maxlength="5000"
+          placeholder="Scrivi un aggiornamento o rispondi al supporto…"
+          [disabled]="ticket.status === 'closed'"
+        ></textarea>
+        <footer class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <small class="text-xs text-ink-muted">{{
+            ticket.status === 'closed'
+              ? 'Il ticket è chiuso.'
+              : 'Aggiornamento in tempo reale via SSE'
+          }}</small>
+          <button
+            class="min-h-11 rounded-ui border-0 bg-brand px-4 text-sm font-bold text-white disabled:opacity-50"
+            type="submit"
+            [disabled]="replySending() || ticket.status === 'closed' || !replyBody.trim()"
+          >
+            {{ replySending() ? 'Invio…' : 'Invia risposta' }}
+          </button>
+        </footer>
+      </form>
+    </aside>
+  </div>
 }

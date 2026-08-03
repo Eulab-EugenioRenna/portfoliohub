@@ -1,10 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Queue } from 'bullmq';
 import { In, IsNull, type Repository } from 'typeorm';
 import { StaffUserEntity } from '../admin/entities/staff-user.entity';
+import { integrationsConfig } from '../config/integrations.config';
 import { UserEntity } from '../identity/entities/user.entity';
 import { WorkspaceMembershipEntity } from '../workspaces/entities/workspace-membership.entity';
 import type {
@@ -42,6 +44,8 @@ export class NotificationsService {
     @InjectRepository(StaffNotificationEntity)
     private readonly staffNotifications: Repository<StaffNotificationEntity>,
     @InjectQueue('email') private readonly emailQueue: Queue<EmailJobData>,
+    @Inject(integrationsConfig.KEY)
+    private readonly config: ConfigType<typeof integrationsConfig>,
   ) {}
 
   list(userId: string, workspaceId: string): Promise<NotificationEntity[]> {
@@ -132,6 +136,7 @@ export class NotificationsService {
       role: In(['admin', 'support']),
       status: 'active',
     });
+    const emailRecipients = new Map<string, string>();
     for (const staff of recipients) {
       await this.staffNotifications.save(
         this.staffNotifications.create({
@@ -145,9 +150,16 @@ export class NotificationsService {
           createdAt: new Date(),
         }),
       );
+      emailRecipients.set(staff.email.toLowerCase(), `staff:${staff.id}`);
+    }
+    if (this.config.supportEmail) {
+      const address = this.config.supportEmail.toLowerCase();
+      if (!emailRecipients.has(address)) emailRecipients.set(address, 'support-inbox');
+    }
+    for (const [recipient, recipientKey] of emailRecipients) {
       await this.queueEmail({
         workspaceId: input.workspaceId,
-        recipient: staff.email,
+        recipient,
         template: 'support.ticket.staff_activity',
         category: 'transactional',
         variables: {
@@ -155,9 +167,26 @@ export class NotificationsService {
           message: input.body.slice(0, 1000),
           actionUrl: '#tickets',
         },
-        idempotencyKey: `ticket:${input.ticketId}:${input.eventId}:staff:${staff.id}`,
+        idempotencyKey: `ticket:${input.ticketId}:${input.eventId}:${recipientKey}`,
       });
     }
+  }
+
+  async notifyTicketOpened(input: {
+    userId: string;
+    ticketId: string;
+    workspaceId: string;
+    subject: string;
+  }): Promise<void> {
+    await this.notifyTicketUserByTemplate({
+      ...input,
+      body: 'La richiesta è stata ricevuta ed è ora in attesa del supporto.',
+      eventId: `opened:${input.ticketId}`,
+      kind: 'support.ticket.opened',
+      title: `Ticket aperto: ${input.subject}`,
+      template: 'support.ticket.opened_confirmation',
+      variables: { status: 'Aperto' },
+    });
   }
 
   async notifyTicketUser(input: {
@@ -168,25 +197,65 @@ export class NotificationsService {
     body: string;
     eventId: string;
   }): Promise<void> {
+    await this.notifyTicketUserByTemplate({
+      ...input,
+      kind: 'support.ticket.reply',
+      title: `Nuova risposta: ${input.subject}`,
+      template: 'support.ticket.user_reply',
+      variables: {},
+    });
+  }
+
+  async notifyTicketStatus(input: {
+    userId: string;
+    ticketId: string;
+    workspaceId: string;
+    subject: string;
+    status: string;
+    eventId: string;
+  }): Promise<void> {
+    await this.notifyTicketUserByTemplate({
+      ...input,
+      body: `Lo stato della richiesta è ora: ${input.status}.`,
+      kind: 'support.ticket.status',
+      title: `Stato ticket: ${input.status}`,
+      template: 'support.ticket.status_changed',
+      variables: { status: input.status },
+    });
+  }
+
+  private async notifyTicketUserByTemplate(input: {
+    userId: string;
+    ticketId: string;
+    workspaceId: string;
+    subject: string;
+    body: string;
+    eventId: string;
+    kind: string;
+    title: string;
+    template: string;
+    variables: Record<string, string>;
+  }): Promise<void> {
     const user = await this.users.findOneBy({ id: input.userId });
     if (!user) return;
     await this.notify({
       userId: user.id,
       workspaceId: input.workspaceId,
-      kind: 'support.ticket.reply',
-      title: `Nuova risposta: ${input.subject}`,
+      kind: input.kind,
+      title: input.title,
       body: input.body.slice(0, 1000),
       actionUrl: '/ticket',
     });
     await this.queueEmail({
       workspaceId: input.workspaceId,
       recipient: user.email,
-      template: 'support.ticket.user_reply',
+      template: input.template,
       category: 'transactional',
       variables: {
         subject: input.subject,
         message: input.body.slice(0, 1000),
         actionUrl: '/ticket',
+        ...input.variables,
       },
       idempotencyKey: `ticket:${input.ticketId}:${input.eventId}:user:${user.id}`,
     });

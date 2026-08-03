@@ -46,6 +46,14 @@ describe('PortfolioHub email templates', () => {
       { subject: 'Upload bloccato', message: 'Abbiamo risposto.', actionUrl: '/ticket' },
     ],
     [
+      'support.ticket.opened_confirmation',
+      { subject: 'Upload bloccato', message: 'Richiesta ricevuta.', actionUrl: '/ticket' },
+    ],
+    [
+      'support.ticket.status_changed',
+      { subject: 'Upload bloccato', status: 'Risolto', actionUrl: '/ticket' },
+    ],
+    [
       'workspace.product',
       {
         subject: 'Novità PortfolioHub',

@@ -13,6 +13,7 @@ export const integrationsConfig = registerAs('integrations', () => ({
   emailProvider: process.env.EMAIL_PROVIDER ?? 'local',
   resendApiKey: process.env.RESEND_API_KEY ?? '',
   emailFrom: process.env.EMAIL_FROM ?? 'PortfolioHub <noreply@localhost>',
+  supportEmail: process.env.SUPPORT_EMAIL ?? '',
   adminEmail: process.env.ADMIN_EMAIL ?? '',
   adminPassword: process.env.ADMIN_PASSWORD ?? '',
   uploadLockTtlMs: Number(process.env.UPLOAD_LOCK_TTL_MS ?? 30_000),

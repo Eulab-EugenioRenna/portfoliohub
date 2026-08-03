@@ -31,6 +31,7 @@ describe('NotificationsService ticket channels', () => {
       staffUsers as never,
       staffNotifications as never,
       queue as never,
+      { supportEmail: 'eulabconsult@gmail.com' } as never,
     );
 
     await service.notifySupportStaff({
@@ -49,6 +50,14 @@ describe('NotificationsService ticket channels', () => {
         template: 'support.ticket.staff_activity',
       }),
       expect.objectContaining({ jobId: expect.not.stringContaining(':') }),
+    );
+    expect(queue.add).toHaveBeenCalledWith(
+      'send',
+      expect.objectContaining({
+        recipient: 'eulabconsult@gmail.com',
+        template: 'support.ticket.staff_activity',
+      }),
+      expect.anything(),
     );
   });
 
@@ -71,6 +80,7 @@ describe('NotificationsService ticket channels', () => {
       staffUsers as never,
       staffNotifications as never,
       queue as never,
+      { supportEmail: 'eulabconsult@gmail.com' } as never,
     );
 
     await service.notifyTicketUser({
@@ -90,6 +100,58 @@ describe('NotificationsService ticket channels', () => {
         template: 'support.ticket.user_reply',
       }),
       expect.objectContaining({ jobId: expect.not.stringContaining(':') }),
+    );
+  });
+
+  it('emails the user on ticket opening and status changes', async () => {
+    const notifications = repository();
+    const preferences = repository();
+    const deliveries = repository();
+    const memberships = repository();
+    const users = repository();
+    const staffUsers = repository();
+    const staffNotifications = repository();
+    const queue = { add: jest.fn(async () => undefined) };
+    users.findOneBy.mockResolvedValue({ id: 'user-1', email: 'client@example.test' });
+    const service = new NotificationsService(
+      notifications as never,
+      preferences as never,
+      deliveries as never,
+      memberships as never,
+      users as never,
+      staffUsers as never,
+      staffNotifications as never,
+      queue as never,
+      { supportEmail: 'eulabconsult@gmail.com' } as never,
+    );
+
+    await service.notifyTicketOpened({
+      userId: 'user-1',
+      ticketId: 'ticket-1',
+      workspaceId: 'workspace-1',
+      subject: 'Upload bloccato',
+    });
+    await service.notifyTicketStatus({
+      userId: 'user-1',
+      ticketId: 'ticket-1',
+      workspaceId: 'workspace-1',
+      subject: 'Upload bloccato',
+      status: 'Risolto',
+      eventId: 'status-resolved',
+    });
+
+    expect(queue.add).toHaveBeenCalledWith(
+      'send',
+      expect.objectContaining({ template: 'support.ticket.opened_confirmation' }),
+      expect.anything(),
+    );
+    expect(queue.add).toHaveBeenCalledWith(
+      'send',
+      expect.objectContaining({
+        template: 'support.ticket.status_changed',
+        variables: expect.objectContaining({ status: 'Risolto' }),
+      }),
+      expect.anything(),
     );
   });
 });

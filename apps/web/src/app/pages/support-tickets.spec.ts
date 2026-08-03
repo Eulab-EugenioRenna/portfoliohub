@@ -46,6 +46,12 @@ describe('SupportTicketsPage layout', () => {
 
     const modal = document.body.querySelector('.create-ticket-modal');
     expect(modal).toBeTruthy();
-    expect(modal?.parentElement).toBe(document.body);
+    const layer = modal?.parentElement;
+    expect(layer?.parentElement).toBe(document.body);
+    expect(layer?.querySelector('[aria-label="Chiudi nuova richiesta"]')).toBeTruthy();
+
+    modal?.querySelector<HTMLButtonElement>('[aria-label="Chiudi"]')?.click();
+    fixture.detectChanges();
+    expect(document.body.querySelector('.create-ticket-modal')).toBeNull();
   });
 });

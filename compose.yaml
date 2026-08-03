@@ -67,6 +67,7 @@ services:
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-local}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-PortfolioHub <noreply@localhost>}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-eulabconsult@gmail.com}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@portfoliohub.test}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-this-local-admin-password}
       BILLING_PROVIDER: ${BILLING_PROVIDER:-local}
