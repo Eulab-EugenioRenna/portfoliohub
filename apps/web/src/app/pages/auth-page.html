@@ -266,10 +266,20 @@
           @if (mode() === 'login') {
             <span>Non hai un account?</span>
             <a class="font-bold text-brand" routerLink="/registrati">Registrati</a>
-          } @else {
+          } @else if (mode() === 'signup') {
             <span>Hai già un account?</span>
             <a class="font-bold text-brand" routerLink="/accedi">Accedi</a>
+          } @else {
+            <a class="font-bold text-brand" routerLink="/accedi">Torna all’accesso</a>
           }
+          <nav class="mt-4 flex justify-center gap-4 text-xs" aria-label="Documenti legali">
+            <a class="font-bold text-ink-muted hover:text-brand" routerLink="/legal/terms"
+              >Termini</a
+            >
+            <a class="font-bold text-ink-muted hover:text-brand" routerLink="/legal/privacy"
+              >Privacy</a
+            >
+          </nav>
         </footer>
       }
     </div>

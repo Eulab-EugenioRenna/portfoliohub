@@ -755,6 +755,79 @@
               </div></ph-card
             >
           }
+          @case ('legal') {
+            <ph-section-heading
+              eyebrow="Trasparenza"
+              title="Termini e privacy"
+              description="Consulta le condizioni del servizio e come PortfolioHub protegge e tratta i dati."
+            />
+            <div class="grid gap-4 lg:grid-cols-2">
+              <a
+                class="group rounded-card border border-stroke bg-panel p-6 text-ink no-underline transition hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-float"
+                routerLink="/legal/terms"
+              >
+                <span
+                  class="grid size-12 place-items-center rounded-xl bg-brand/12 text-xs font-black text-brand"
+                  >TE</span
+                >
+                <span
+                  class="mt-6 block text-[10px] font-black tracking-[.14em] text-brand uppercase"
+                  >Condizioni del servizio</span
+                >
+                <strong class="mt-2 block text-2xl font-extrabold">Termini e condizioni</strong>
+                <span class="mt-3 block text-sm leading-7 text-ink-muted">
+                  Account, trial Pro, piani, pagamenti, contenuti, consegne, fair use e
+                  cancellazione.
+                </span>
+                <span
+                  class="mt-6 flex items-center justify-between border-t border-stroke pt-4 text-sm font-bold"
+                >
+                  Apri il documento
+                  <i class="not-italic text-brand transition group-hover:translate-x-1">→</i>
+                </span>
+              </a>
+              <a
+                class="group rounded-card border border-stroke bg-panel p-6 text-ink no-underline transition hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-float"
+                routerLink="/legal/privacy"
+              >
+                <span
+                  class="grid size-12 place-items-center rounded-xl bg-positive/12 text-xs font-black text-positive"
+                  >PR</span
+                >
+                <span
+                  class="mt-6 block text-[10px] font-black tracking-[.14em] text-positive uppercase"
+                  >Protezione dei dati</span
+                >
+                <strong class="mt-2 block text-2xl font-extrabold">Privacy Policy</strong>
+                <span class="mt-3 block text-sm leading-7 text-ink-muted">
+                  Ruoli privacy, dati trattati, infrastruttura, fornitori, retention, cookie e
+                  diritti.
+                </span>
+                <span
+                  class="mt-6 flex items-center justify-between border-t border-stroke pt-4 text-sm font-bold"
+                >
+                  Apri il documento
+                  <i class="not-italic text-brand transition group-hover:translate-x-1">→</i>
+                </span>
+              </a>
+            </div>
+            <ph-card>
+              <div class="flex flex-col justify-between gap-5 md:flex-row md:items-center">
+                <div>
+                  <ph-badge>CONTATTO</ph-badge>
+                  <h3 class="mt-4 text-xl font-extrabold">Domande contrattuali o privacy</h3>
+                  <p class="mt-2 text-sm leading-6 text-ink-muted">
+                    Non inviare password, token, file riservati o dati di pagamento via email.
+                  </p>
+                </div>
+                <a
+                  class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-ui border border-stroke bg-panel-raised px-4 text-sm font-bold text-ink no-underline hover:border-brand/40 hover:text-brand"
+                  href="mailto:eulabconsult@gmail.com"
+                  >eulabconsult@gmail.com</a
+                >
+              </div>
+            </ph-card>
+          }
           @case ('account') {
             <ph-section-heading
               eyebrow="Lifecycle"

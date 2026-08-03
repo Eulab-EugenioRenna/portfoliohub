@@ -1,89 +1,188 @@
-<main class="min-h-dvh bg-canvas px-5 py-8 text-ink sm:px-8">
-  <header class="mx-auto flex max-w-4xl items-center justify-between border-b border-stroke pb-6">
-    <a
-      class="grid size-11 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep text-xs font-black text-white no-underline"
-      href="/"
-      >PH</a
-    >
-    <nav class="flex items-center gap-2 text-sm font-bold" aria-label="Documenti legali">
-      <a
-        class="rounded-full px-3 py-2 text-ink-muted no-underline hover:bg-panel-raised hover:text-ink"
-        routerLink="/legal/terms"
-        >Termini</a
+<main class="min-h-dvh overflow-x-hidden bg-canvas text-ink">
+  <header
+    class="sticky top-0 z-30 border-b border-stroke bg-canvas/92 px-5 backdrop-blur-xl sm:px-8"
+  >
+    <div class="mx-auto flex min-h-20 max-w-6xl items-center justify-between gap-5">
+      <a class="flex items-center gap-3 text-ink no-underline" href="/">
+        <span
+          class="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-deep text-sm font-black text-white shadow-float"
+          >P</span
+        >
+        <span class="hidden sm:block">
+          <strong class="block text-sm">PortfolioHub</strong>
+          <small class="block text-[10px] font-bold tracking-[.12em] text-ink-muted uppercase"
+            >Centro legale</small
+          >
+        </span>
+      </a>
+      <nav
+        class="flex rounded-full border border-stroke bg-panel p-1 text-xs font-extrabold sm:text-sm"
+        aria-label="Documenti legali"
       >
-      <a
-        class="rounded-full px-3 py-2 text-ink-muted no-underline hover:bg-panel-raised hover:text-ink"
-        routerLink="/legal/privacy"
-        >Privacy</a
-      >
-    </nav>
+        <a
+          class="rounded-full px-3 py-2 text-ink-muted no-underline transition hover:text-ink sm:px-4"
+          [class.bg-brand]="kind() === 'terms'"
+          [class.text-white]="kind() === 'terms'"
+          routerLink="/legal/terms"
+          >Termini</a
+        >
+        <a
+          class="rounded-full px-3 py-2 text-ink-muted no-underline transition hover:text-ink sm:px-4"
+          [class.bg-brand]="kind() === 'privacy'"
+          [class.text-white]="kind() === 'privacy'"
+          routerLink="/legal/privacy"
+          >Privacy</a
+        >
+      </nav>
+    </div>
   </header>
+
   @if (loading()) {
-    <section class="mx-auto grid min-h-80 max-w-4xl place-items-center text-sm text-ink-muted">
-      Caricamento documento…
-    </section>
-  } @else if (error()) {
-    <section class="mx-auto max-w-4xl py-20">
-      <div class="rounded-card border border-negative/30 bg-negative/8 p-6 text-negative">
-        {{ error() }}
+    <section class="mx-auto grid min-h-[70dvh] max-w-6xl place-items-center px-5 text-center">
+      <div>
+        <span
+          class="mx-auto block size-9 animate-spin rounded-full border-2 border-brand border-r-transparent"
+        ></span>
+        <p class="mt-4 text-sm text-ink-muted">Caricamento {{ documentLabel() }}…</p>
       </div>
     </section>
   } @else if (policy(); as document) {
-    <article class="mx-auto max-w-4xl py-14 sm:py-20">
-      <span class="text-xs font-black tracking-[0.16em] text-brand uppercase">{{
-        document.kind
-      }}</span>
-      <h1 class="mt-4 font-display text-4xl font-normal tracking-[-0.045em] sm:text-6xl">
-        {{ document.content?.title ?? 'Documento in preparazione' }}
-      </h1>
-      @if (document.version) {
-        <p class="mt-4 text-sm text-ink-muted">
-          Versione {{ document.version }} · efficace dal {{ document.effectiveAt }}
-        </p>
-      }
-      @for (section of document.content?.sections ?? []; track section.heading) {
-        <section class="mt-10 border-t border-stroke pt-8">
-          <h2 class="text-xl font-extrabold tracking-[-0.025em]">{{ section.heading }}</h2>
-          <p class="mt-3 whitespace-pre-line text-base leading-8 text-ink-muted">
-            {{ section.body }}
-          </p>
-        </section>
-      }
-      @if (document.status === 'draft-not-published') {
-        <p class="mt-4 max-w-2xl text-base leading-8 text-ink-muted">{{ plan().summary }}</p>
-        <div class="mt-10 rounded-card border border-caution/30 bg-caution/8 p-5">
-          <strong class="text-sm text-caution">Documento in revisione legale</strong>
-          <p class="mt-2 text-sm leading-7 text-ink-muted">
-            Questa pagina mostra la struttura prevista, non costituisce ancora il testo legale in
-            vigore. La pubblicazione richiede revisione e approvazione professionale.
-          </p>
-        </div>
-        <section class="mt-10 border-t border-stroke pt-8">
-          <span class="text-xs font-black tracking-[.14em] text-brand uppercase"
-            >Struttura prevista</span
+    <section class="relative overflow-hidden border-b border-stroke px-5 py-14 sm:px-8 sm:py-20">
+      <div
+        class="pointer-events-none absolute top-[-280px] left-[55%] size-[620px] rounded-full bg-brand/12 blur-3xl"
+      ></div>
+      <div class="relative mx-auto max-w-6xl">
+        <div class="flex flex-wrap items-center gap-2">
+          <span
+            class="rounded-full border border-brand/25 bg-brand/8 px-3 py-1.5 text-[10px] font-black tracking-[.14em] text-brand uppercase"
+            >{{
+              document.kind === 'terms' ? 'Condizioni del servizio' : 'Protezione dei dati'
+            }}</span
           >
-          <h2 class="mt-3 text-2xl font-extrabold">{{ plan().title }}</h2>
-          <ol class="mt-6 grid gap-3">
-            @for (section of plan().sections; track section; let index = $index) {
-              <li
-                class="grid grid-cols-[36px_1fr] items-center gap-3 rounded-ui border border-stroke bg-panel p-4"
-              >
-                <span
-                  class="grid size-9 place-items-center rounded-lg bg-brand/10 text-xs font-black text-brand"
-                  >0{{ index + 1 }}</span
+          <span
+            class="rounded-full border border-stroke bg-panel px-3 py-1.5 text-[10px] font-bold"
+          >
+            {{ document.version }}
+          </span>
+        </div>
+        <h1
+          class="mt-7 max-w-5xl break-words font-display text-4xl leading-[1.02] font-normal tracking-[-.05em] sm:text-6xl lg:text-7xl"
+        >
+          {{ document.content.title }}
+        </h1>
+        <p class="mt-6 max-w-3xl text-base leading-8 text-ink-muted sm:text-lg">
+          {{ document.content.summary }}
+        </p>
+        <div class="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-xs text-ink-muted">
+          <span><strong class="text-ink">Data</strong> · {{ document.dateLabel }}</span>
+          <span
+            ><strong class="text-ink">Destinatari</strong> · {{ document.content.audience }}</span
+          >
+        </div>
+      </div>
+    </section>
+
+    <div
+      class="mx-auto grid max-w-6xl gap-10 px-5 py-10 sm:px-8 lg:grid-cols-[260px_minmax(0,1fr)] lg:py-16"
+    >
+      <aside class="lg:sticky lg:top-28 lg:self-start">
+        @if (isDraft()) {
+          <div class="rounded-card border border-caution/30 bg-caution/8 p-4">
+            <span class="text-[10px] font-black tracking-[.14em] text-caution uppercase"
+              >Revisione necessaria</span
+            >
+            <p class="mt-2 text-xs leading-6 text-ink-muted">
+              Testo aderente all’applicativo, ancora da completare con sede e dati fiscali e da
+              validare professionalmente prima dell’efficacia.
+            </p>
+          </div>
+        }
+        @if (sourceUnavailable()) {
+          <p class="mt-3 rounded-ui border border-stroke bg-panel p-3 text-xs text-ink-muted">
+            Il registro versioni non è raggiungibile: è mostrata la bozza incorporata nell’app.
+          </p>
+        }
+        <nav class="mt-6 hidden border-l border-stroke pl-4 lg:block" aria-label="Indice">
+          <span class="text-[10px] font-black tracking-[.14em] text-ink-muted uppercase"
+            >In questa pagina</span
+          >
+          <ol class="mt-3 grid gap-1">
+            @for (section of document.content.sections; track section.id) {
+              <li>
+                <a
+                  class="block rounded-lg px-2 py-2 text-xs leading-5 text-ink-muted no-underline transition hover:bg-panel hover:text-brand"
+                  [href]="'#' + section.id"
+                  >{{ section.heading }}</a
                 >
-                <strong class="text-sm">{{ section }}</strong>
               </li>
             }
           </ol>
+        </nav>
+      </aside>
+
+      <article class="min-w-0">
+        @for (section of document.content.sections; track section.id) {
+          <section
+            class="scroll-mt-28 border-t border-stroke py-9 first:border-t-0 first:pt-0 sm:py-11"
+            [id]="section.id"
+          >
+            <h2 class="max-w-3xl text-2xl font-extrabold tracking-[-.03em] sm:text-3xl">
+              {{ section.heading }}
+            </h2>
+            <p
+              class="mt-5 max-w-[78ch] whitespace-pre-line text-[15px] leading-8 text-ink-muted sm:text-base"
+            >
+              {{ section.body }}
+            </p>
+          </section>
+        }
+
+        <section class="mt-4 rounded-shell border border-brand/25 bg-brand/7 p-6 sm:p-8">
+          <span class="text-[10px] font-black tracking-[.14em] text-brand uppercase"
+            >Hai una domanda?</span
+          >
+          <h2 class="mt-3 text-2xl font-extrabold">Parliamone in modo trasparente.</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-7 text-ink-muted">
+            Per chiarimenti contrattuali, privacy, esercizio dei diritti o segnalazioni puoi
+            contattare Eulab. Non inviare password, token o dati di pagamento.
+          </p>
+          <a
+            class="mt-5 inline-flex min-h-11 items-center rounded-ui bg-brand px-4 text-sm font-bold text-white no-underline"
+            href="mailto:eulabconsult@gmail.com"
+            >eulabconsult@gmail.com</a
+          >
         </section>
-      }
-    </article>
+      </article>
+    </div>
   }
-  <footer
-    class="mx-auto flex max-w-4xl flex-wrap justify-between gap-3 border-t border-stroke py-8 text-xs text-ink-muted"
-  >
-    <span>PortfolioHub · Centro legale</span>
-    <span>Versioni pubblicate e archiviate senza modifiche retroattive</span>
+
+  <footer class="border-t border-stroke bg-panel px-5 py-8 sm:px-8">
+    <div
+      class="mx-auto flex max-w-6xl flex-col justify-between gap-5 text-xs text-ink-muted sm:flex-row sm:items-center"
+    >
+      <span>PortfolioHub · un servizio Eulab</span>
+      <nav class="flex flex-wrap gap-5" aria-label="Riferimenti">
+        <a class="font-bold text-ink no-underline hover:text-brand" routerLink="/legal/terms"
+          >Termini</a
+        >
+        <a class="font-bold text-ink no-underline hover:text-brand" routerLink="/legal/privacy"
+          >Privacy</a
+        >
+        <a
+          class="font-bold text-ink no-underline hover:text-brand"
+          href="https://eur-lex.europa.eu/eli/reg/2016/679/oj"
+          rel="noopener noreferrer"
+          target="_blank"
+          >GDPR</a
+        >
+        <a
+          class="font-bold text-ink no-underline hover:text-brand"
+          href="https://www.garanteprivacy.it/"
+          rel="noopener noreferrer"
+          target="_blank"
+          >Garante Privacy</a
+        >
+      </nav>
+    </div>
   </footer>
 </main>

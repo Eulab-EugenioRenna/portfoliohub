@@ -1,8 +1,8 @@
 # Piano pagine Termini e Privacy
 
-Stato: struttura prodotto pronta; testi legali non ancora pubblicabili.
+Stato: bozze italiane complete integrate nell’app il 3 agosto 2026; revisione professionale e dati societari completi ancora necessari prima della pubblicazione efficace.
 
-Questo piano traduce `POLICY_GOVERNANCE.md`, `PRD.md` e `SECURITY_ARCHITECTURE.md` nelle due prime pagine pubbliche del centro legale. Non sostituisce la redazione e la revisione di un professionista legale e fiscale.
+Questo piano traduce `POLICY_GOVERNANCE.md`, `PRD.md` e `SECURITY_ARCHITECTURE.md` nelle due prime pagine pubbliche del centro legale. I testi sono implementati in `apps/web/src/app/pages/legal-content.ts` e vengono mostrati quando il Policy Publisher non restituisce ancora una versione efficace. Non sostituiscono la revisione di un professionista legale e fiscale.
 
 ## Termini e condizioni
 

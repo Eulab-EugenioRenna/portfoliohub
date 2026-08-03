@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore, type Principal } from '../core/auth.store';
 import { BILLING_PORTAL_URL } from '../core/billing-portal';
@@ -38,6 +38,7 @@ type SettingsSection =
   | 'plans'
   | 'data'
   | 'tutorial'
+  | 'legal'
   | 'account';
 
 interface BillingPlan {
@@ -129,6 +130,7 @@ declare global {
   imports: [
     FormsModule,
     DatePipe,
+    RouterLink,
     AppendToBody,
     PhBadge,
     PhButton,
@@ -167,6 +169,7 @@ export class SettingsPage implements OnDestroy {
     { id: 'plans', label: 'Piani', description: 'Quote e fatturazione', icon: 'PL' },
     { id: 'data', label: 'Dati e backup', description: 'Portabilità e pulizia', icon: 'DA' },
     { id: 'tutorial', label: 'Tutorial', description: 'Tour guidato', icon: 'TU' },
+    { id: 'legal', label: 'Termini e privacy', description: 'Documenti legali', icon: 'LE' },
     { id: 'account', label: 'Account', description: 'Cancellazione', icon: 'AC' },
   ];
   protected readonly activeSection = signal<SettingsSection>('profile');
