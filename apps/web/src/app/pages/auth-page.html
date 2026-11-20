@@ -202,6 +202,14 @@
                 required
             /></label>
           }
+          @if (notice() && !error()) {
+            <div
+              class="rounded-ui border border-stroke bg-panel-raised p-3 text-sm text-ink-muted"
+              role="status"
+            >
+              {{ notice() }}
+            </div>
+          }
           @if (error()) {
             <div
               class="rounded-ui border border-negative/30 bg-negative/8 p-3 text-sm text-negative"
@@ -210,27 +218,30 @@
               {{ error() }}
             </div>
           }
-          @if (blockedSessions().length) {
-            <div class="grid gap-2" aria-label="Sessioni attive da revocare">
-              @for (session of blockedSessions(); track session.id) {
+          @if (sessionLimit(); as limitInfo) {
+            <div class="grid gap-2" aria-label="Sessioni attive da chiudere">
+              @for (session of limitInfo.sessions; track session.id) {
                 <div
                   class="flex items-center gap-3 rounded-ui border border-stroke bg-panel-raised p-3"
+                  data-session-row
                 >
                   <div class="min-w-0 flex-1">
                     <strong class="block truncate text-sm text-ink">
-                      {{ session.userAgent || 'Dispositivo non identificato' }}
+                      {{ describeUserAgent(session.userAgent) }}
                     </strong>
                     <small class="mt-1 block text-xs text-ink-muted">
-                      IP {{ session.ipAddress || 'non disponibile' }}
+                      Ultimo uso {{ describeLastUse(session.lastSeenAt) }} · IP
+                      {{ session.ipAddress || 'non disponibile' }}
                     </small>
                   </div>
                   <button
                     class="shrink-0 rounded-ui border border-negative/30 px-3 py-2 text-xs font-bold text-negative disabled:opacity-50"
                     type="button"
+                    data-revoke-session
                     [disabled]="!!revokingSession()"
                     (click)="revokeAndLogin(session.id)"
                   >
-                    {{ revokingSession() === session.id ? 'Revoca…' : 'Revoca e accedi' }}
+                    {{ revokingSession() === session.id ? 'Chiusura…' : 'Chiudi e accedi' }}
                   </button>
                 </div>
               }

@@ -237,7 +237,7 @@
             <ph-card>
               <ph-section-heading
                 title="Dispositivi collegati"
-                description="Free e Pro consentono un dispositivo; Unlimited ne consente due contemporaneamente."
+                description="Browser e dispositivi con una sessione attiva. Chiudi quelli che non usi più per liberare un posto."
               />
               <div class="mt-5 grid gap-3">
                 @for (session of sessions(); track session.id) {
@@ -247,15 +247,15 @@
                     <div class="min-w-0 flex-1">
                       <div class="flex flex-wrap items-center gap-2">
                         <strong class="truncate text-sm text-ink">
-                          {{ session.userAgent || 'Dispositivo non identificato' }}
+                          {{ describeUserAgent(session.userAgent) }}
                         </strong>
                         @if (session.id === auth.principal()?.sessionId) {
                           <ph-badge tone="success">Sessione corrente</ph-badge>
                         }
                       </div>
                       <p class="mt-1 text-xs text-ink-muted">
-                        IP {{ session.ipAddress || 'non disponibile' }} · Ultima attività
-                        {{ session.lastSeenAt | date: 'dd/MM/yyyy HH:mm' }}
+                        Ultimo uso {{ describeLastUse(session.lastSeenAt) }} · IP
+                        {{ session.ipAddress || 'non disponibile' }}
                       </p>
                     </div>
                     @if (session.id !== auth.principal()?.sessionId) {
@@ -263,7 +263,7 @@
                         tone="danger"
                         [loading]="saving()"
                         (click)="revokeSession(session.id)"
-                        >Revoca</ph-button
+                        >Chiudi</ph-button
                       >
                     }
                   </div>
@@ -277,7 +277,7 @@
                   [disabled]="sessions().length <= 1"
                   [loading]="saving()"
                   (click)="revokeOtherSessions()"
-                  >Revoca tutte le altre sessioni</ph-button
+                  >Chiudi tutte le altre sessioni</ph-button
                 >
               </div>
             </ph-card>

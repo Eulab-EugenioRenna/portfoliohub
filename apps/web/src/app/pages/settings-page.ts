@@ -15,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthStore, type Principal } from '../core/auth.store';
 import { BILLING_PORTAL_URL } from '../core/billing-portal';
+import { type AccountSession, describeLastUse, describeUserAgent } from '../core/session-info';
 import { UiStore } from '../core/ui-store';
 import { WorkspaceStore } from '../core/workspace.store';
 import { AppendToBody } from '../ui/append-to-body';
@@ -98,12 +99,7 @@ interface DeletionRequest {
   scheduledFor: string;
 }
 
-interface AccountSession {
-  id: string;
-  userAgent: string | null;
-  ipAddress: string | null;
-  createdAt: string;
-  lastSeenAt: string;
+interface SettingsSession extends AccountSession {
   expiresAt: string;
 }
 
@@ -181,7 +177,9 @@ export class SettingsPage implements OnDestroy {
   protected readonly preferences = signal<NotificationPreferences | null>(null);
   protected readonly privacyRequests = signal<PrivacyRequest[]>([]);
   protected readonly deletion = signal<DeletionRequest | null>(null);
-  protected readonly sessions = signal<AccountSession[]>([]);
+  protected readonly sessions = signal<SettingsSession[]>([]);
+  protected readonly describeUserAgent = describeUserAgent;
+  protected readonly describeLastUse = describeLastUse;
   protected readonly billingAnnual = signal(false);
   protected readonly checkoutOpen = signal(false);
   protected readonly checkoutPlan = signal<'pro' | 'unlimited' | null>(null);
@@ -514,7 +512,7 @@ export class SettingsPage implements OnDestroy {
         ),
         firstValueFrom(this.http.get<PrivacyRequest[]>('/api/v1/account/privacy-requests')),
         firstValueFrom(this.http.get<DeletionRequest | null>('/api/v1/account/deletion')),
-        firstValueFrom(this.http.get<AccountSession[]>('/api/v1/auth/sessions')),
+        firstValueFrom(this.http.get<SettingsSession[]>('/api/v1/auth/sessions')),
       ]);
       this.billing.set(billing);
       this.catalog.set(catalog);

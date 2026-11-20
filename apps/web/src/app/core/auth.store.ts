@@ -1,6 +1,15 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+
+export type SessionCheck = 'authenticated' | 'unauthenticated' | 'unavailable';
+
+/** Errori che non provano che la sessione sia scaduta: rete, timeout, 5xx, rate limit. */
+function isTransient(error: unknown): boolean {
+  const status = (error as { status?: number } | null)?.status;
+  return status === undefined || status === 0 || status === 408 || status === 429 || status >= 500;
+}
 
 export interface Principal {
   userId: string;
@@ -12,17 +21,62 @@ export interface Principal {
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   readonly principal = signal<Principal | null>(null);
   readonly loading = signal(false);
 
+  /** Pause tra i tentativi di `/auth/me` quando il server non risponde (modificabile nei test). */
+  retryDelaysMs = [400, 1200];
+  private revalidation: Promise<void> | null = null;
+
+  /**
+   * Verifica la sessione con `/auth/me`. Solo un 401/403 la dichiara scaduta;
+   * un errore transitorio non cancella l'utente e viene ritentato.
+   */
+  async checkSession(): Promise<SessionCheck> {
+    if (this.principal()) return 'authenticated';
+    for (let attempt = 0; ; attempt++) {
+      try {
+        this.principal.set(await firstValueFrom(this.http.get<Principal>('/api/v1/auth/me')));
+        return 'authenticated';
+      } catch (error) {
+        if (!isTransient(error)) {
+          this.principal.set(null);
+          return 'unauthenticated';
+        }
+        const delay = this.retryDelaysMs[attempt];
+        if (delay === undefined) return 'unavailable';
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
   async restore(): Promise<boolean> {
-    if (this.principal()) return true;
+    return (await this.checkSession()) === 'authenticated';
+  }
+
+  /**
+   * Chiamato dall'interceptor quando una richiesta qualunque risponde 401.
+   * Non fa logout da solo: chiede a `/auth/me` e chiude la sessione locale
+   * soltanto se anche lì la risposta è 401 (sessione davvero scaduta o revocata).
+   */
+  handleUnauthorized(): Promise<void> {
+    if (!this.principal()) return Promise.resolve();
+    this.revalidation ??= this.revalidate().finally(() => {
+      this.revalidation = null;
+    });
+    return this.revalidation;
+  }
+
+  private async revalidate(): Promise<void> {
     try {
       this.principal.set(await firstValueFrom(this.http.get<Principal>('/api/v1/auth/me')));
-      return true;
-    } catch {
+    } catch (error) {
+      if (!(error instanceof HttpErrorResponse) || error.status !== 401) return;
       this.principal.set(null);
-      return false;
+      await this.router.navigate(['/accedi'], {
+        queryParams: { returnUrl: this.router.url, sessione: 'scaduta' },
+      });
     }
   }
 
@@ -58,18 +112,28 @@ export class AuthStore {
     }
   }
 
-  async verify(token: string): Promise<void> {
-    this.principal.set(
-      await firstValueFrom(this.http.post<Principal>('/api/v1/auth/verify-email', { token })),
-    );
-  }
-
-  async consumeMagicLink(token: string): Promise<void> {
+  async verify(token: string, revokeSessionId?: string): Promise<void> {
     this.loading.set(true);
     try {
       this.principal.set(
         await firstValueFrom(
-          this.http.post<Principal>('/api/v1/auth/magic-link/consume', { token }),
+          this.http.post<Principal>('/api/v1/auth/verify-email', { token, revokeSessionId }),
+        ),
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async consumeMagicLink(token: string, revokeSessionId?: string): Promise<void> {
+    this.loading.set(true);
+    try {
+      this.principal.set(
+        await firstValueFrom(
+          this.http.post<Principal>('/api/v1/auth/magic-link/consume', {
+            token,
+            revokeSessionId,
+          }),
         ),
       );
     } finally {
