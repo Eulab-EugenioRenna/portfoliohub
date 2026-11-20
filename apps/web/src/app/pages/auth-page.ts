@@ -52,11 +52,6 @@ export class AuthPage implements OnInit {
     const reason = this.route.snapshot.queryParamMap.get('sessione');
     if (reason === 'scaduta')
       this.notice.set('La sessione è scaduta. Accedi di nuovo per continuare.');
-    if (reason === 'non-verificata') {
-      this.notice.set(
-        'Non siamo riusciti a verificare la sessione perché il servizio non risponde. Riprova tra poco: se la sessione è valida verrai riconosciuto.',
-      );
-    }
     const magicToken = this.route.snapshot.queryParamMap.get('magic');
     if (this.mode() === 'login' && magicToken) void this.consumeMagicLink(magicToken);
     if (this.mode() === 'verify' && this.token) void this.submit();
@@ -141,7 +136,8 @@ export class AuthPage implements OnInit {
       this.error.set(sessionLimitMessage(limit.limit));
       return;
     }
-    this.sessionLimit.set(null);
+    // Errore diverso dal limite (es. retry fallito per rete/5xx): l'elenco e l'azione
+    // pendente restano, così l'utente può riprovare senza ripartire dal link.
     const message = (error as { error?: { message?: string | string[] } } | null)?.error?.message;
     this.error.set(Array.isArray(message) ? message.join(' · ') : (message ?? fallback));
   }

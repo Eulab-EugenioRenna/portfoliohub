@@ -138,7 +138,7 @@ describe('AuthPage session limit', () => {
     expect(navigateByUrl).toHaveBeenCalledWith('/panoramica');
   });
 
-  it('keeps the list and shows the error when the retry fails again', async () => {
+  it('keeps the list and pending token when the retry fails, and allows a further retry with the same token', async () => {
     const { fixture, http } = await setup('login', { magic: 'magic-token' });
     fixture.detectChanges();
     http
@@ -150,11 +150,45 @@ describe('AuthPage session limit', () => {
     ).click();
     http
       .expectOne('/api/v1/auth/magic-link/consume')
-      .flush({ message: 'Sessione non trovata' }, { status: 400, statusText: 'Bad Request' });
+      .flush(
+        { message: 'Servizio momentaneamente non disponibile' },
+        { status: 500, statusText: 'Server Error' },
+      );
     await flushUi(fixture);
     expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
-      'Sessione non trovata',
+      'Servizio momentaneamente non disponibile',
     );
+    expect(fixture.nativeElement.querySelectorAll('[data-session-row]')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('[data-revoke-session]')).toHaveLength(2);
     expect(navigateByUrl).not.toHaveBeenCalled();
+
+    (
+      fixture.nativeElement.querySelectorAll('[data-revoke-session]')[1] as HTMLButtonElement
+    ).click();
+    const retry = http.expectOne('/api/v1/auth/magic-link/consume');
+    expect(retry.request.body).toEqual({ token: 'magic-token', revokeSessionId: 'sess-phone' });
+    retry.flush(principal);
+    await flushUi(fixture);
+    expect(navigateByUrl).toHaveBeenCalledWith('/panoramica');
+  });
+
+  it('refreshes the list when the retry hits the limit again', async () => {
+    const { fixture, http } = await setup('login', { magic: 'magic-token' });
+    fixture.detectChanges();
+    http
+      .expectOne('/api/v1/auth/magic-link/consume')
+      .flush(limit409, { status: 409, statusText: 'Conflict' });
+    await flushUi(fixture);
+    (
+      fixture.nativeElement.querySelectorAll('[data-revoke-session]')[0] as HTMLButtonElement
+    ).click();
+    http
+      .expectOne('/api/v1/auth/magic-link/consume')
+      .flush(
+        { ...limit409, sessions: [limit409.sessions[1]] },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await flushUi(fixture);
+    expect(fixture.nativeElement.querySelectorAll('[data-session-row]')).toHaveLength(1);
   });
 });

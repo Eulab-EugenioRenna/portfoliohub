@@ -49,6 +49,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth-page').then((module) => module.AuthPage),
   },
   {
+    path: 'servizio-non-disponibile',
+    title: 'Servizio non raggiungibile · PortfolioHub',
+    loadComponent: () =>
+      import('./pages/service-unavailable').then((module) => module.ServiceUnavailablePage),
+  },
+  {
     path: 'collab/:token',
     title: 'Invito collaborazione · PortfolioHub',
     loadComponent: () =>

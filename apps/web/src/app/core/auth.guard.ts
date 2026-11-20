@@ -9,12 +9,11 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   const check = await auth.checkSession();
   if (check === 'authenticated') return true;
   // 'unavailable': il server non risponde, la sessione non è stata dichiarata scaduta.
-  // Non c'è un utente da mostrare, quindi si torna all'accesso senza toccare i cookie:
-  // al prossimo caricamento la sessione valida viene recuperata.
-  return router.createUrlTree(['/accedi'], {
-    queryParams: {
-      returnUrl: state.url,
-      ...(check === 'unavailable' ? { sessione: 'non-verificata' } : {}),
-    },
-  });
+  // Niente redirect al login: stato temporaneo con «Riprova», cookie intatti.
+  if (check === 'unavailable') {
+    return router.createUrlTree(['/servizio-non-disponibile'], {
+      queryParams: { returnUrl: state.url },
+    });
+  }
+  return router.createUrlTree(['/accedi'], { queryParams: { returnUrl: state.url } });
 };
