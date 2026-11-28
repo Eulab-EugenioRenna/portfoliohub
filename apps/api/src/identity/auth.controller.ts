@@ -23,8 +23,8 @@ import {
   EmailDto,
   LoginDto,
   ResetPasswordDto,
+  SessionTokenDto,
   SignUpDto,
-  TokenDto,
   UpdateProfileDto,
 } from './dto/auth.dto';
 import type { AuthenticatedPrincipal, SessionIssue } from './identity.types';
@@ -49,7 +49,7 @@ export class AuthController {
 
   @Post('verify-email')
   async verifyEmail(
-    @Body() dto: TokenDto,
+    @Body() dto: SessionTokenDto,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthenticatedPrincipal> {
@@ -78,7 +78,7 @@ export class AuthController {
 
   @Post('magic-link/consume')
   async consumeMagicLink(
-    @Body() dto: TokenDto,
+    @Body() dto: SessionTokenDto,
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthenticatedPrincipal> {

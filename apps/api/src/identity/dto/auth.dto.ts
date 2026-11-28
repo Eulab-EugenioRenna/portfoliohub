@@ -64,6 +64,12 @@ export class TokenDto {
   token!: string;
 }
 
+export class SessionTokenDto extends TokenDto {
+  @IsOptional()
+  @IsUUID()
+  revokeSessionId?: string;
+}
+
 export class ResetPasswordDto extends TokenDto {
   @IsString()
   @MinLength(12)

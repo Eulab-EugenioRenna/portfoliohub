@@ -11,7 +11,7 @@ import type { ConfigType } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import argon2 from 'argon2';
 import type { Queue } from 'bullmq';
-import { DataSource, IsNull, type Repository } from 'typeorm';
+import { DataSource, type EntityManager, IsNull, type Repository } from 'typeorm';
 import { EMAIL_PROVIDER, type EmailProvider } from '../adapters/contracts';
 import { integrationsConfig } from '../config/integrations.config';
 import { OutboxService } from '../events/outbox.service';
@@ -22,14 +22,15 @@ import type {
   EmailDto,
   LoginDto,
   ResetPasswordDto,
+  SessionTokenDto,
   SignUpDto,
-  TokenDto,
   UpdateProfileDto,
 } from './dto/auth.dto';
 import { AuthTokenEntity } from './entities/auth-token.entity';
 import { SessionEntity } from './entities/session.entity';
 import { UserEntity } from './entities/user.entity';
 import type { AuthenticatedPrincipal, SessionIssue } from './identity.types';
+import { sessionLimitForPlans } from './session-limits';
 import { SessionsRepository } from './sessions.repository';
 import { UsersRepository } from './users.repository';
 
@@ -128,18 +129,20 @@ export class AuthService {
   }
 
   async verifyEmail(
-    dto: TokenDto,
+    dto: SessionTokenDto,
     request: { userAgent?: string; ip?: string },
   ): Promise<SessionIssue> {
-    const user = await this.consumeToken(dto.token, 'verify-email', async (entity, manager) => {
+    // Token e sessione nella stessa transazione: se il limite è raggiunto (409) il token resta
+    // valido e il client può ripetere la stessa richiesta con `revokeSessionId`.
+    return this.consumeToken(dto.token, 'verify-email', async (entity, manager) => {
       const repository = manager.getRepository(UserEntity);
       const current = await repository.findOneByOrFail({ id: entity.userId });
       current.status = 'active';
       current.emailVerifiedAt = new Date();
       current.updatedAt = new Date();
-      return repository.save(current);
+      const user = await repository.save(current);
+      return this.issueSession(user, request, dto.revokeSessionId, manager);
     });
-    return this.issueSession(user, request);
   }
 
   async login(dto: LoginDto, request: { userAgent?: string; ip?: string }): Promise<SessionIssue> {
@@ -160,13 +163,13 @@ export class AuthService {
   }
 
   async consumeMagicLink(
-    dto: TokenDto,
+    dto: SessionTokenDto,
     request: { userAgent?: string; ip?: string },
   ): Promise<SessionIssue> {
-    const user = await this.consumeToken(dto.token, 'magic-login', async (entity, manager) =>
-      manager.getRepository(UserEntity).findOneByOrFail({ id: entity.userId }),
-    );
-    return this.issueSession(user, request);
+    return this.consumeToken(dto.token, 'magic-login', async (entity, manager) => {
+      const user = await manager.getRepository(UserEntity).findOneByOrFail({ id: entity.userId });
+      return this.issueSession(user, request, dto.revokeSessionId, manager);
+    });
   }
 
   async requestPasswordReset(dto: EmailDto): Promise<void> {
@@ -266,52 +269,41 @@ export class AuthService {
     user: UserEntity,
     request: { userAgent?: string; ip?: string },
     revokeSessionId?: string,
+    manager?: EntityManager,
   ): Promise<SessionIssue> {
+    if (!manager) {
+      return this.database.transaction('SERIALIZABLE', (own) =>
+        this.issueSession(user, request, revokeSessionId, own),
+      );
+    }
     const token = randomBytes(32).toString('base64url');
     const csrfToken = randomBytes(24).toString('base64url');
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const result = await this.database.transaction('SERIALIZABLE', async (manager) => {
-      await manager.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [user.id]);
-      const sessionRepository = manager.getRepository(SessionEntity);
-      if (revokeSessionId) {
-        await sessionRepository.update(
-          { id: revokeSessionId, userId: user.id, revokedAt: IsNull() },
-          { revokedAt: now },
-        );
-      }
-      const active = await sessionRepository
-        .createQueryBuilder('session')
-        .where('session.userId = :userId', { userId: user.id })
-        .andWhere('session.revokedAt IS NULL')
-        .andWhere('session.expiresAt > now()')
-        .orderBy('session.lastSeenAt', 'DESC')
-        .getMany();
-      const limit = await this.sessionLimit(user.id, manager);
-      if (active.length >= limit) {
-        return { session: null, limit, active };
-      }
-      const session = await sessionRepository.save(
-        sessionRepository.create({
-          id: randomUUID(),
-          userId: user.id,
-          tokenHash: this.tokenHash(token),
-          userAgent: request.userAgent?.slice(0, 512) ?? null,
-          ipAddress: request.ip?.slice(0, 64) ?? null,
-          expiresAt,
-          lastSeenAt: now,
-          createdAt: now,
-          revokedAt: null,
-        }),
+    await manager.query(`SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`, [user.id]);
+    const sessionRepository = manager.getRepository(SessionEntity);
+    // Unica revoca implicita ammessa: la sessione scelta esplicitamente dall'utente.
+    if (revokeSessionId) {
+      await sessionRepository.update(
+        { id: revokeSessionId, userId: user.id, revokedAt: IsNull() },
+        { revokedAt: now },
       );
-      return { session, limit, active };
-    });
-    if (!result.session) {
+    }
+    const active = await sessionRepository
+      .createQueryBuilder('session')
+      .where('session.userId = :userId', { userId: user.id })
+      .andWhere('session.revokedAt IS NULL')
+      .andWhere('session.expiresAt > now()')
+      .orderBy('session.lastSeenAt', 'DESC')
+      .getMany();
+    const limit = await this.sessionLimit(user.id, manager);
+    if (active.length >= limit) {
+      // Lanciare dentro la transazione la annulla: nessuna revoca né consumo del token.
       throw new ConflictException({
-        message: `Limite dispositivi raggiunto: revoca una sessione per accedere`,
+        message: 'Limite dispositivi raggiunto: revoca una sessione per accedere',
         code: 'SESSION_LIMIT_REACHED',
-        limit: result.limit,
-        sessions: result.active.map((item) => ({
+        limit,
+        sessions: active.map((item) => ({
           id: item.id,
           userAgent: item.userAgent,
           ipAddress: item.ipAddress,
@@ -320,7 +312,19 @@ export class AuthService {
         })),
       });
     }
-    const session = result.session;
+    const session = await sessionRepository.save(
+      sessionRepository.create({
+        id: randomUUID(),
+        userId: user.id,
+        tokenHash: this.tokenHash(token),
+        userAgent: request.userAgent?.slice(0, 512) ?? null,
+        ipAddress: request.ip?.slice(0, 64) ?? null,
+        expiresAt,
+        lastSeenAt: now,
+        createdAt: now,
+        revokedAt: null,
+      }),
+    );
     return {
       token,
       csrfToken,
@@ -334,20 +338,16 @@ export class AuthService {
     };
   }
 
-  private async sessionLimit(
-    userId: string,
-    manager: import('typeorm').EntityManager,
-  ): Promise<number> {
-    const [result] = await manager.query<Array<{ unlimited: boolean }>>(
-      `SELECT EXISTS (
-         SELECT 1 FROM workspace_memberships membership
+  private async sessionLimit(userId: string, manager: EntityManager): Promise<number> {
+    const plans = await manager.query<Array<{ plan: string }>>(
+      `SELECT DISTINCT workspace.plan AS plan
+         FROM workspace_memberships membership
          JOIN workspaces workspace ON workspace.id = membership.workspace_id
-         WHERE membership.user_id = $1 AND membership.status = 'active'
-           AND workspace.status = 'active' AND workspace.plan = 'unlimited'
-       ) AS unlimited`,
+        WHERE membership.user_id = $1 AND membership.status = 'active'
+          AND workspace.status = 'active'`,
       [userId],
     );
-    return result?.unlimited ? 2 : 1;
+    return sessionLimitForPlans(plans.map((row) => row.plan));
   }
 
   private async sendToken(
@@ -380,7 +380,7 @@ export class AuthService {
   private async consumeToken<T>(
     token: string,
     purpose: AuthTokenEntity['purpose'],
-    action: (token: AuthTokenEntity, manager: import('typeorm').EntityManager) => Promise<T>,
+    action: (token: AuthTokenEntity, manager: EntityManager) => Promise<T>,
   ): Promise<T> {
     return this.database.transaction('SERIALIZABLE', async (manager) => {
       const repository = manager.getRepository(AuthTokenEntity);
@@ -414,10 +414,7 @@ export class AuthService {
     return createHmac('sha256', this.config.sessionPepper).update(token).digest('hex');
   }
 
-  private async uniqueSlug(
-    name: string,
-    manager: import('typeorm').EntityManager,
-  ): Promise<string> {
+  private async uniqueSlug(name: string, manager: EntityManager): Promise<string> {
     const base =
       name
         .normalize('NFKD')
